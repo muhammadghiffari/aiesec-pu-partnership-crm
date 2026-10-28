@@ -40,6 +40,17 @@ The ownership table is an initial coordination plan, not a substitute for issue 
 
 Initially: `python scripts/validate-handover.py`. After M0 scaffold, replace/extend the checks with `pnpm check`, unit/integration tests, migrations validation, authz matrix and Playwright. Never use the existence of a command or successful build alone as proof of the requirement.
 
+## Local configuration (M0-04)
+
+- Copy `.env.example` to `.env.local` and fill values in. `.env.example` contains placeholders only and must never hold real secrets; `.env*` files are never committed.
+- Startup configuration is validated by `@crm/config` (`loadConfig()`): typed, Zod-validated values for app runtime, database, auth, the LLM adapter and worker settings. On a missing, malformed or placeholder value it throws `ConfigError` naming the **variable and reason only** — secret values are never echoed into messages, logs or CI output.
+- **Development defaults (safe):** `DATABASE_URL=postgres://localhost:5432/aiesec_crm_dev`, `APP_URL=http://localhost:3000`, `TZ=Asia/Jakarta`, auth disabled, AI disabled, assisted send and companion disabled.
+- **Production rules:** `DATABASE_URL` and `APP_URL` are required; auth credentials are required (`AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_SECRET`); `OUTBOUND_ASSISTED_SEND_ENABLED` and `COMPANION_ENABLED` are forbidden in production without a documented product-owner decision in `docs/DECISIONS.md`.
+- **Provider-gated keys:** `SEARCH_API_KEY` is required only when `SEARCH_PROVIDER != none`; same for `ENRICH_API_KEY`; `LLM_API_KEY`/`LLM_MODEL_DEFAULT` are required only when `AI_ENABLED=true`.
+- **Runtime vs coding-agent models:** `LLM_*` variables configure the application runtime provider only. IDE/agent model names never appear in application configuration.
+- **Redaction:** use `redactConfig()` / `describeConfig()` for logs and health output; `SECRET_KEYS` is the canonical scrub list.
+- Versions and tooling: Node.js 22, pnpm 10.15.0 (`corepack enable`), Python 3.10+ (3.12 in CI).
+
 ## CI quality gates (M0-03)
 
 The `ci` workflow (`.github/workflows/ci.yml`) runs one job with clearly named steps; a failing step fails the PR check with the original command's exit code. Steps in order:

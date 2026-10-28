@@ -17,3 +17,11 @@
 - Biome scope expanded: M0-02's directory excludes (`docs`, `.github`, `.kiro`, `scripts`) replaced by file-type-aware handling (`ignoreUnknown` + `!**/*.md`); remaining exclusions documented in `docs/DEVELOPER_WORKFLOW.md`.
 - CI prerequisites, diagnostics and intentional exclusions documented in `docs/DEVELOPER_WORKFLOW.md` ("CI quality gates (M0-03)").
 - Superseded PR runs are cancelled via concurrency group; workflow permissions remain `contents: read`.
+
+### M0-04 — Environment/config contract and secrets policy
+
+- `@crm/config` now implements the typed startup contract for `.env.example`: Zod-validated app runtime, database, auth, LLM adapter, worker and integration settings.
+- Production fails safely: DATABASE_URL/APP_URL required, auth credentials required, assisted outbound send and companion forbidden in production; development defaults are localhost-only and documented.
+- Secrets are never echoed: `ConfigError` names variables and reasons only; `redactConfig()`/`SECRET_KEYS` provide the log/CI scrub list; placeholder values ("changeme" etc.) are rejected.
+- Runtime LLM configuration kept separate from coding-agent model names (documented in `.env.example` and `docs/DEVELOPER_WORKFLOW.md`).
+- 14 new unit tests in `packages/config/src/index.test.ts` (success, production, malformed, placeholder, provider-gated keys, redaction); M0-02 workspace dependency guard extended with a scoped, justified `zod` allowance for `@crm/config`.
