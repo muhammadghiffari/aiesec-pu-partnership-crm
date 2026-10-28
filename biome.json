@@ -5,11 +5,7 @@
     "ignoreUnknown": true,
     "includes": [
       "**",
-      "!docs",
-      "!*.md",
-      "!.github",
-      "!.kiro",
-      "!scripts",
+      "!**/*.md",
       "!data",
       "!templates",
       "!**/.next",

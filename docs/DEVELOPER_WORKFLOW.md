@@ -39,3 +39,29 @@ The ownership table is an initial coordination plan, not a substitute for issue 
 ## Quality gate
 
 Initially: `python scripts/validate-handover.py`. After M0 scaffold, replace/extend the checks with `pnpm check`, unit/integration tests, migrations validation, authz matrix and Playwright. Never use the existence of a command or successful build alone as proof of the requirement.
+
+## CI quality gates (M0-03)
+
+The `ci` workflow (`.github/workflows/ci.yml`) runs one job with clearly named steps; a failing step fails the PR check with the original command's exit code. Steps in order:
+
+| Step | Command | Validates |
+|---|---|---|
+| Install pinned pnpm | `pnpm/action-setup@v4` | Uses the `packageManager` field in `package.json` (pnpm@10.15.0); no override in CI |
+| Set up Node.js | `actions/setup-node@v4` | Node 22 (`engines.node: ">=22"`), with pnpm store cache |
+| Install dependencies | `pnpm install --frozen-lockfile` | Reproducible install from `pnpm-lock.yaml`; any lockfile/manifest mismatch fails here |
+| Typecheck | `pnpm typecheck` | `tsc --noEmit` across the workspace |
+| Lint and format check | `pnpm lint` | `biome check .` — lint rules and formatting in one pass |
+| Unit tests | `pnpm test` | Vitest suite (`tests/**`, package sources) |
+| Build web app | `pnpm --filter @crm/web build` | `next build` of `apps/web` |
+| Handover and diagram validation | `python scripts/validate-handover.py` | Required doc pack, fixed 13-page diagram XML integrity; Python stdlib only |
+| Dependency security audit | `pnpm audit --prod --audit-level high` | Blocks on **high or critical** vulnerabilities in production dependencies |
+
+Prerequisites and notes:
+
+- **Versions:** Node.js 22, pnpm 10.15.0 (pinned via `packageManager`; contributors should use Corepack: `corepack enable`), Python 3.10+ (3.12 in CI).
+- **Lockfile required:** `pnpm-lock.yaml` must be committed; CI installs with `--frozen-lockfile`, so local dependency changes without an updated lockfile fail CI by design. Update it locally with `pnpm install` and commit the result.
+- **Network access:** only the dependency install and the audit step need registry access; all other steps run offline.
+- **Concurrency:** superseded PR runs are cancelled; runs on `main` are never cancelled.
+- **Permissions:** `contents: read` only; no secrets are read or printed by any step.
+- **Common failures:** lockfile mismatch → run `pnpm install` and commit the lockfile; lint failure → `pnpm format` locally (Biome `check --write`); audit failure → upgrade or get product-owner exception documented in `docs/DECISIONS.md` before merging; handover/diagram failure → see the script's listed missing files or XML errors.
+- **Intentional validation exclusions:** Biome 2.6 handles JS/TS, JSON and YAML (verified: it formats `.github/workflows/ci.yml`) but not Markdown, Python or Bash. The M0-02 directory excludes (`docs`, `.github`, `.kiro`, `scripts`) were therefore narrowed to file-type-level so supported files anywhere in the repo are linted; `ignoreUnknown: true` skips the rest. Remaining explicit excludes: `**/*.md` (docs structure is covered by `scripts/validate-handover.py`), `data/` and `templates/` (byte-stable synthetic fixtures, no code).
