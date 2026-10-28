@@ -62,6 +62,8 @@ const ALLOWED_DEV_DEPS = new Set([
   "@crm/db",
   "@crm/docs",
   "@crm/worker",
+  // M1-01: in-process PostgreSQL for migration/constraint tests in @crm/db (dev only).
+  "@electric-sql/pglite",
 ]);
 
 describe("M0-02 workspace scaffold", () => {
