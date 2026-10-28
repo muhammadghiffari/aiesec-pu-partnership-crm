@@ -26,3 +26,13 @@
 - Interim policy choices recorded as Q-09..Q-11 in `docs/DECISIONS.md`.
 - Not included (by scope): config loading (M0-04), DB-backed user/session repositories (M1-01), HTTP cookie/CSRF wiring in `apps/web`, audit persistence (M0-06 consumes `onDecision`).
 
+### M0-06 — Append-only audit service (FR-100)
+
+- `packages/core/src/audit/`: `AuditWriter`/`AuditReader` ports with **no update or delete surface**, in-memory reference store (frozen copies, unique event ids), and `createAuditService`.
+- `audited()` runs an authorized handler and appends one event (`MUTATION`, `APPROVAL`, `EXPORT`) inside the same `AuditedTransaction`; audit failure or unsafe metadata rolls the mutation back.
+- `overrideGate()` requires `gate.override` (CRM Lead) and a 10-500 character reason, and records the named lead (`authorizedByUserId`).
+- Denials of authenticated actors are recorded as `ACCESS_DENIED` through the M0-05 guard's `onDecision` hook (no second logging system). Anonymous failures are intentionally not stored.
+- Metadata is flat and minimized; contact-PII/secret/body-like keys and values are rejected (`AuditMetadataError`), with `changedFieldNames()` as the preferred way to describe edits.
+- Audit read requires `audit.read` (CRM Lead). `audit.update`/`audit.delete` are not authorizable for any role.
+- Not included (by scope): PostgreSQL table, grants/trigger enforcing immutability and the transactional repository (M1-01 must implement `AuditedTransaction` and the reference behaviour of the in-memory store).
+
