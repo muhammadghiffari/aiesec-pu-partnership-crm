@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["vitest", "node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "paths": {
+      "@crm/core": ["./packages/core/src/index.ts"],
+      "@crm/db": ["./packages/db/src/index.ts"],
+      "@crm/ai": ["./packages/ai/src/index.ts"],
+      "@crm/docs": ["./packages/docs/src/index.ts"],
+      "@crm/config": ["./packages/config/src/index.ts"],
+      "@crm/worker": ["./apps/worker/src/index.ts"]
+    }
+  },
+  "include": ["packages/*/src/**/*.ts", "apps/worker/src/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["node_modules", "apps/web", "dist", ".next"]
+}

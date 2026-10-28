@@ -1,0 +1,15 @@
+{
+  "name": "@crm/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Bounded research/content jobs. MUST NEVER hold message-send credentials or send tools (AGENTS.md, D-010).",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
+  }
+}
