@@ -36,3 +36,10 @@
 - Audit read requires `audit.read` (CRM Lead). `audit.update`/`audit.delete` are not authorizable for any role.
 - Not included (by scope): PostgreSQL table, grants/trigger enforcing immutability and the transactional repository (M1-01 must implement `AuditedTransaction` and the reference behaviour of the in-memory store).
 
+### M1-01 — Schema and migrations for diagram entities (SCHEMA-LOCK)
+
+- `packages/db`: typed, reversible migration runner (`migrateUp`/`migrateDown`, one transaction per migration, advisory lock, checksum of applied migrations) and five migrations covering all 30 Class Diagram classes plus lookups and `user_sessions`. See `docs/MIGRATIONS.md`.
+- Database-level gates (defence in depth): LoA self-approval and CRM-Lead-only approver, realization project only from a SIGNED LoA, finished project requires report link, outreach approval invalidated by text/recipient/channel change, DNC and verified-recipient checks, financial XOR in-kind revenue with proof, merchandise item XOR bundle, immutable `audit_log` (UPDATE/DELETE/TRUNCATE).
+- Tests run against real PostgreSQL via PGlite (dev dependency of `@crm/db` only): diagram conformance parsed from the fixed XML, reversibility, and ~110 constraint/cardinality tests.
+- Interim decisions Q-13..Q-16 recorded in `docs/DECISIONS.md`. The fixed diagram is unchanged; Q-13 requests approval for one type deviation.
+

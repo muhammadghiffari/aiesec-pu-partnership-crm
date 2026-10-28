@@ -82,3 +82,8 @@ Use the values in `docs/ESSM_MAPPING.md` for ESSM classifications. Other enums s
 - Audit log mutations are append-only. Export and waiver actions are logged.
 - Proposal valuations, actual partner receipts and merchandise sales are separately aggregated to prevent false revenue totals.
 - RateCardAssessment derived formula stays blocked from production until Q-01 in `docs/DECISIONS.md` is resolved.
+
+## Implementation status (M1-01)
+
+The schema is implemented in `packages/db/src/migrations/`. `packages/db/src/diagram-conformance.test.ts` parses the fixed Class Diagram XML and fails if a class, attribute, nullability, relationship multiplicity or controlled value drifts. Deliberate differences are listed in `docs/DECISIONS.md` Q-13..Q-16. See `docs/MIGRATIONS.md` for how to run, roll back and extend migrations.
+
