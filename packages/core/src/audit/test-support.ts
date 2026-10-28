@@ -21,6 +21,12 @@ import { createInMemoryAuditStore } from "./memory-store";
 import { createAuditService } from "./service";
 import type { AuditEvent, AuditedTransaction, AuditStore, AuditWriter } from "./types";
 
+/** Anything the harness can roll back when a transaction fails. */
+export interface Rollbackable {
+  snapshot(): unknown;
+  restore(snapshot: unknown): void;
+}
+
 /** Protected domain records. `restore` models a DB rollback. */
 export class DomainStore {
   records = new Map<string, string>([["partner-1", "Synthetic Partner"]]);
@@ -44,6 +50,8 @@ export async function buildAuditHarness(
     store?: AuditStore;
     denialWriterFails?: boolean;
     viewerEnabled?: boolean;
+    /** Extra domain store rolled back together with the default one. */
+    extraDomain?: Rollbackable;
   } = {},
 ) {
   const key = await generateTestKeyPair();
@@ -68,6 +76,7 @@ export async function buildAuditHarness(
 
   const transaction: AuditedTransaction = async (work) => {
     const snapshot = domain.snapshot();
+    const extraSnapshot = options.extraDomain?.snapshot();
     const buffered: AuditEvent[] = [];
     const writer: AuditWriter = {
       async append(event) {
@@ -82,6 +91,7 @@ export async function buildAuditHarness(
       return result;
     } catch (error) {
       domain.restore(snapshot);
+      if (options.extraDomain) options.extraDomain.restore(extraSnapshot);
       throw error;
     }
   };
