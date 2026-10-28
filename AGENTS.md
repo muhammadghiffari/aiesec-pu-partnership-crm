@@ -42,7 +42,8 @@ If any two sources conflict, do not silently choose or invent a new rule. Docume
 
 ## Collaboration and model use
 
-- Repository owner/product lead: `@muhammadghiffari`.
+- Repository owner/product lead: Muhammad Ghiffari (`@muhammadghiffari`).
+- **Identity clarification:** Muhammad Ghiffari and “Ghiffari” in older task cards refer to the same person. Kiro CLI and ZCode IDE are both environments used by that one developer; they are not separate team members.
 - Developer: `hicesse` (GitHub username as provided by the product owner).
 - Existing developer: Catalna; confirm her exact GitHub handle before adding it to CODEOWNERS/collaborators. Do not guess the handle.
 - One task, one owner, one branch, one PR. Do not allow two agents to edit the same files concurrently.

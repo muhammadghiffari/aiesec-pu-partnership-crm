@@ -24,7 +24,9 @@ Allow Kiro to ask for confirmation when it performs material external actions. D
 
 ## 3. Developer profiles and model routing
 
-### A. Muhammad Ghiffari — owner/architecture/domain
+**Identity clarification:** Muhammad Ghiffari (`@muhammadghiffari`) is one developer and the product/repository owner. “Ghiffari” in any older task card is shorthand for the same person, not a fourth team member. Kiro CLI and ZCode IDE are two hosts used by Muhammad Ghiffari. Model choice may differ by host; ownership and GitHub identity do not.
+
+### A. Muhammad Ghiffari (`@muhammadghiffari`) — owner/architecture/domain
 
 - **Kiro CLI:** MiniMax M2.5 (0.25x), Medium for repository bootstrap and small routine work; Qwen3 Coder Next (0.05x), Low/Medium only for bounded validation/status/formatting; GLM-5 (0.50x), Medium for ordinary implementation if available; Claude Sonnet 5.5 (1.30x), High for architecture integration, difficult debugging and serious review; Claude Opus 5.5 (2.00x), XHigh only for unresolved, high-risk reasoning. GPT-5.6 Terra/Sol are escalation alternatives, not routine defaults.
 - **ZCode IDE:** GLM-5.3-Flash, Medium for docs, repetitive UI scaffolding and small test/fixture changes; GLM-5.3, High for schema, lifecycle, RBAC, approval integrity, Rate Card and money calculations.
@@ -60,11 +62,11 @@ Run only one task card per owner/branch/PR. Model and effort are listed before t
 
 ### M0-01 — Bootstrap private GitHub repository
 
-- **Owner:** Ghiffari
+- **Owner:** Muhammad Ghiffari (`@muhammadghiffari`)
 - **Model:** Kiro CLI · MiniMax M2.5 (0.25×)
 - **Effort:** Medium
 - **Workflow mode:** Plan for preflight, then Default for execution
-- **Independent review:** Ghiffari verifies output manually
+- **Owner verification (not an independent code review):** Muhammad Ghiffari (`@muhammadghiffari`) verifies the external-action results manually
 - **Read:** `AGENTS.md; README.md; docs/DEVELOPER_WORKFLOW.md; scripts/bootstrap-github.sh`
 
 **Prompt (paste after setting the model/effort):**
@@ -83,7 +85,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: Kiro MiniMax M2.5, Medium
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): Kiro MiniMax M2.5, Medium
 - **Read:** `AGENTS.md; docs/PRD.md §13–16; .kiro/specs/E0-foundation/{requirements,design,tasks}.md`
 
 **Prompt (paste after setting the model/effort):**
@@ -102,7 +104,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** ZCode · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: Kiro Qwen3 Coder Next, Low/Medium for bounded review
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): Kiro Qwen3 Coder Next, Low/Medium for bounded review
 - **Read:** `AGENTS.md; .github/workflows/ci.yml; docs/TESTING_UAT.md`
 
 **Prompt (paste after setting the model/effort):**
@@ -121,7 +123,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · DeepSeek-V4.1-Flash-1017
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, Medium
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): ZCode GLM-5.3, Medium
 - **Read:** `AGENTS.md; .env.example; docs/SECURITY_PRIVACY.md; .kiro/specs/E0-foundation/`
 
 **Prompt (paste after setting the model/effort):**
@@ -136,7 +138,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 
 ### M0-05 — Authentication foundation and server-side RBAC
 
-- **Owner:** Ghiffari
+- **Owner:** Muhammad Ghiffari (`@muhammadghiffari`)
 - **Model:** ZCode · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
@@ -155,7 +157,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 
 ### M0-06 — Append-only audit service
 
-- **Owner:** Ghiffari
+- **Owner:** Muhammad Ghiffari (`@muhammadghiffari`)
 - **Model:** ZCode · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
@@ -174,7 +176,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 
 ### M1-01 — Schema and migrations for diagram entities
 
-- **Owner:** Ghiffari
+- **Owner:** Muhammad Ghiffari (`@muhammadghiffari`)
 - **Model:** ZCode · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
@@ -197,7 +199,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3-Flash, Low/Medium
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): ZCode GLM-5.3-Flash, Low/Medium
 - **Read:** `docs/ESSM_MAPPING.md; docs/DATA_MODEL.md; AGENTS.md`
 
 **Prompt (paste after setting the model/effort):**
@@ -216,7 +218,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** ZCode · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, Medium
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): ZCode GLM-5.3, Medium
 - **Read:** `AGENTS.md; docs/PRD.md partner/contact requirements; docs/DATA_MODEL.md; .kiro/specs/E1-core-essm/`
 
 **Prompt (paste after setting the model/effort):**
@@ -231,7 +233,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 
 ### M1-04 — PartnershipCycle and five-stage lifecycle API
 
-- **Owner:** Ghiffari
+- **Owner:** Muhammad Ghiffari (`@muhammadghiffari`)
 - **Model:** ZCode · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
@@ -254,7 +256,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** ZCode · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, High
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): ZCode GLM-5.3, High
 - **Read:** `docs/ESSM_MAPPING.md; docs/DATA_MODEL.md; AGENTS.md; .kiro/specs/E1-core-essm/`
 
 **Prompt (paste after setting the model/effort):**
@@ -273,7 +275,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · DeepSeek-V4.1-Flash-1017
 - **Effort:** Medium/High
 - **Workflow mode:** Plan for workflow, then implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, Medium
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): ZCode GLM-5.3, Medium
 - **Read:** `AGENTS.md; docs/PRD.md; docs/ARCHITECTURE.md; .kiro/specs/E2-sales-outreach/`
 
 **Prompt (paste after setting the model/effort):**
@@ -292,7 +294,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, High
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): ZCode GLM-5.3, High
 - **Read:** `AGENTS.md; docs/SECURITY_PRIVACY.md; docs/PRD.md contact sourcing; .kiro/specs/E2-sales-outreach/`
 
 **Prompt (paste after setting the model/effort):**
@@ -311,7 +313,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · DeepSeek-V4.1-Flash-1017
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
-- **Independent review:** Catalna: ChatGPT strongest reasoning model, High; Ghiffari signs off
+- **Independent review:** Catalna: ChatGPT strongest reasoning model, High; Muhammad Ghiffari (`@muhammadghiffari`) signs off
 - **Read:** `AGENTS.md; docs/ARCHITECTURE.md; docs/SECURITY_PRIVACY.md; .kiro/specs/E2-sales-outreach/`
 
 **Prompt (paste after setting the model/effort):**
@@ -326,7 +328,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 
 ### M2-04 — Outreach linter and immutable approval hash
 
-- **Owner:** Ghiffari
+- **Owner:** Muhammad Ghiffari (`@muhammadghiffari`)
 - **Model:** ZCode · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
@@ -349,7 +351,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** ZCode · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, High
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): ZCode GLM-5.3, High
 - **Read:** `AGENTS.md; docs/PRD.md outreach requirements; .kiro/specs/E2-sales-outreach/`
 
 **Prompt (paste after setting the model/effort):**
@@ -364,7 +366,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 
 ### M3-01 — Versioned Rate Card and benefit catalog
 
-- **Owner:** Ghiffari
+- **Owner:** Muhammad Ghiffari (`@muhammadghiffari`)
 - **Model:** ZCode · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
@@ -383,7 +385,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 
 ### M3-02 — Packages, ProposalBenefit and pricing snapshots
 
-- **Owner:** Ghiffari
+- **Owner:** Muhammad Ghiffari (`@muhammadghiffari`)
 - **Model:** ZCode · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
@@ -406,7 +408,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** ZCode · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, Medium
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): ZCode GLM-5.3, Medium
 - **Read:** `docs/DATA_MODEL.md; docs/PRD.md meeting/MoM; .kiro/specs/E3-ratecard-sales-close/`
 
 **Prompt (paste after setting the model/effort):**
@@ -421,7 +423,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 
 ### M3-04 — Structured Supply and Demand agreement gate
 
-- **Owner:** Ghiffari
+- **Owner:** Muhammad Ghiffari (`@muhammadghiffari`)
 - **Model:** ZCode · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
@@ -440,7 +442,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 
 ### M3-05 — LoA templates, sequence, approval and signing record
 
-- **Owner:** Ghiffari
+- **Owner:** Muhammad Ghiffari (`@muhammadghiffari`)
 - **Model:** ZCode · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
@@ -463,7 +465,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** ZCode · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, High
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): ZCode GLM-5.3, High
 - **Read:** `AGENTS.md; docs/PRD.md implementation; docs/DATA_MODEL.md; .kiro/specs/E4-implementation-revenue-merch/`
 
 **Prompt (paste after setting the model/effort):**
@@ -478,7 +480,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 
 ### M4-02 — Financial and in-kind actual revenue records
 
-- **Owner:** Ghiffari
+- **Owner:** Muhammad Ghiffari (`@muhammadghiffari`)
 - **Model:** ZCode · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
@@ -501,7 +503,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · DeepSeek-V4.1-Flash-1017
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, Medium
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): ZCode GLM-5.3, Medium
 - **Read:** `AGENTS.md; docs/ESSM_MAPPING.md; docs/PRD.md report requirements; .kiro/specs/E4-implementation-revenue-merch/`
 
 **Prompt (paste after setting the model/effort):**
@@ -520,7 +522,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, High; schema lock if needed
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): ZCode GLM-5.3, High; schema lock if needed
 - **Read:** `AGENTS.md; docs/DATA_MODEL.md; docs/ESSM_MAPPING.md; fixed diagram; .kiro/specs/E4-implementation-revenue-merch/`
 
 **Prompt (paste after setting the model/effort):**
@@ -535,7 +537,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 
 ### M4-05 — Financial formula and double-counting regression tests
 
-- **Owner:** Ghiffari
+- **Owner:** Muhammad Ghiffari (`@muhammadghiffari`)
 - **Model:** ZCode · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Review then implementation
@@ -558,7 +560,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** ZCode · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, Medium
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): ZCode GLM-5.3, Medium
 - **Read:** `AGENTS.md; docs/ESSM_MAPPING.md; docs/PRD.md partner engagement; .kiro/specs/E5-engagement-survey-data/`
 
 **Prompt (paste after setting the model/effort):**
@@ -577,7 +579,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** ZCode · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, Medium
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): ZCode GLM-5.3, Medium
 - **Read:** `AGENTS.md; docs/ESSM_MAPPING.md; docs/PRD.md; .kiro/specs/E5-engagement-survey-data/`
 
 **Prompt (paste after setting the model/effort):**
@@ -592,7 +594,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 
 ### M5-03 — Re-raise decision and new cycle linkage
 
-- **Owner:** Ghiffari
+- **Owner:** Muhammad Ghiffari (`@muhammadghiffari`)
 - **Model:** ZCode · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
@@ -615,7 +617,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · DeepSeek-V4.1-Flash-1017
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, High; approved workbook check
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): ZCode GLM-5.3, High; approved workbook check
 - **Read:** `docs/ESSM_MAPPING.md; docs/SECURITY_PRIVACY.md; docs/PRD.md import; .kiro/specs/E5-engagement-survey-data/`
 
 **Prompt (paste after setting the model/effort):**
@@ -634,7 +636,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, High; independent second review
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): ZCode GLM-5.3, High; independent second review
 - **Read:** `docs/ESSM_MAPPING.md; docs/PRD.md export; .kiro/specs/E5-engagement-survey-data/`
 
 **Prompt (paste after setting the model/effort):**
@@ -653,7 +655,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** ZCode · GLM-5.3
 - **Effort:** Medium/High
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, Medium
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): ZCode GLM-5.3, Medium
 - **Read:** `AGENTS.md; docs/PRD.md reporting; docs/DATA_MODEL.md; .kiro/specs/E5-engagement-survey-data/`
 
 **Prompt (paste after setting the model/effort):**
@@ -668,7 +670,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 
 ### M6-01 — Full authorization matrix and security review
 
-- **Owner:** Ghiffari
+- **Owner:** Muhammad Ghiffari (`@muhammadghiffari`)
 - **Model:** ZCode · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation/review
@@ -710,7 +712,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
-- **Independent review:** Ghiffari: Kiro Claude Sonnet 5.5, High
+- **Independent review:** Muhammad Ghiffari (`@muhammadghiffari`): Kiro Claude Sonnet 5.5, High
 - **Read:** `docs/RUNBOOK.md; docs/SECURITY_PRIVACY.md; hosting ADR; .kiro/specs/E6-hardening-release/`
 
 **Prompt (paste after setting the model/effort):**
@@ -729,7 +731,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** ZCode · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
-- **Independent review:** Nemotron-3.5-Super-VL-120B-A12B via Hermes only for visual screenshot review; Ghiffari signs off
+- **Independent review:** Nemotron-3.5-Super-VL-120B-A12B via Hermes only for visual screenshot review; Muhammad Ghiffari (`@muhammadghiffari`) signs off
 - **Read:** `docs/TESTING_UAT.md; AGENTS.md; fixed diagrams; relevant UI specs`
 
 **Prompt (paste after setting the model/effort):**
@@ -744,7 +746,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 
 ### M6-05 — Privacy, product-owner UAT and deployment decision
 
-- **Owner:** Ghiffari
+- **Owner:** Muhammad Ghiffari (`@muhammadghiffari`)
 - **Model:** ZCode · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan/review; no deploy without approval
@@ -763,8 +765,8 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 
 ### M6-06 — Final release and term handover package
 
-- **Owner:** All; Ghiffari accountable
-- **Model:** Ghiffari: Kiro CLI · Claude Sonnet 5.5; escalate to Opus 5.5 only for unresolved high-risk blockers
+- **Owner:** All; Muhammad Ghiffari (`@muhammadghiffari`) accountable
+- **Model:** Kiro CLI · Claude Sonnet 5.5; escalate to Opus 5.5 only for unresolved high-risk blockers
 - **Effort:** High; Opus escalation XHigh
 - **Workflow mode:** Plan first, then bounded release tasks
 - **Independent review:** Independent reviewer not the author; owner final sign-off
@@ -782,7 +784,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 
 ## 6. Review prompts (model-specific)
 
-### Ghiffari / Kiro final review of a sensitive PR
+### Muhammad Ghiffari (`@muhammadghiffari`) / Kiro final review of a sensitive PR
 - **Model:** Claude Sonnet 5.5 (1.30x), High. Escalate to Claude Opus 5.5 (2.00x), XHigh only if the security/domain ambiguity remains unresolved after a bounded review.
 - **Mode:** Plan/read-only review; do not edit the author's branch.
 

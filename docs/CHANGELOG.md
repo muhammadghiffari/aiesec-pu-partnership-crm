@@ -1,4 +1,5 @@
 # Changelog
+- Clarified that Muhammad Ghiffari (`@muhammadghiffari`) is one person using both Kiro CLI and ZCode IDE; normalized task-card owner/reviewer labels.
 
 ## 2.0 — 2026-10-28
 

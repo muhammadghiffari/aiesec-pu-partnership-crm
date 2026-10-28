@@ -30,6 +30,10 @@ This repository pack is the source package for agents to create the GitHub repos
 
 The national ESSM workbook, signed LoA/MoM files, production exports, transcripts, secrets, and real partner/contact data must **never** be committed to this repository. The `.gitignore` excludes common operational-data locations. The source workbook must remain outside the Git working tree.
 
+## Developer identity
+
+Muhammad Ghiffari (`@muhammadghiffari`) is one developer and the product/repository owner. He uses both Kiro CLI and ZCode IDE; these host names must never be counted as separate team members. The implementation team has three people: Muhammad Ghiffari, Catalna, and `hicesse`.
+
 ## Project status
 
 - Handover package and repo-bootstrap material: prepared.
