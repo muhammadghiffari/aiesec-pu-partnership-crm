@@ -1,0 +1,42 @@
+name: Feature / Requirement
+description: Implement a product requirement or epic task
+title: "[FR-xxx] "
+labels: ["needs-triage"]
+body:
+  - type: input
+    id: fr
+    attributes:
+      label: Requirement ID(s)
+      placeholder: FR-xxx
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: User/business outcome
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Required tests and gate failures
+    validations:
+      required: true
+  - type: dropdown
+    id: data
+    attributes:
+      label: Data / schema impact
+      options:
+        - None
+        - Schema migration
+        - Import/export mapping
+        - PII/security
+        - AI prompt/eval
+    validations:
+      required: true

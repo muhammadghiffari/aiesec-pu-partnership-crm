@@ -1,0 +1,49 @@
+# Dependencies/build
+node_modules/
+.pnpm-store/
+.next/
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Operational or sensitive data (never commit)
+data/**
+!data/.gitkeep
+private-data/
+exports/
+imports/
+backups/
+*.sqlite
+*.sqlite3
+*.dump
+*.sql.gz
+*.xlsx
+*.xls
+*.pdf
+*.docx
+*.doc
+!templates/*.docx
+*.zip
+*.wav
+*.mp3
+*.m4a
+*.srt
+*.vtt
+transcripts/
+
+# IDE/OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

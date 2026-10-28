@@ -1,0 +1,13 @@
+requirement_group,epic,canonical_source,minimum_test
+FR-100,E0,PRD §11; Class Diagram; DECISIONS D-007,D-008,role-action matrix; same lead capabilities; self-approval negative case
+FR-200,E1,PRD §3; Class Diagram,partner dedupe; multiple cycles preserve history; DNC blocks draft/send
+FR-300,E1,ESSM_MAPPING §2-4; Activity Prospecting,industry/program dropdown; 4 scores range 1-5; human Proceed; AI fit separate
+FR-400,E2,Activity Sales Process; Sequence Diagram,verified contact/channel; linter; hash invalidation; max 3 follow-ups
+FR-500,E2,Class Diagram; PRD §4,RateCard entity; proposal calculation; immutable price snapshot; MoM/SnD gate
+FR-600,E3,Activity Sales Process and Close Deal,confirmed SnD; LoA submitter cannot approve own; signed document required
+FR-700,E4,DFD Level 1 and L2 Implementation,financial and in-kind distinct; receipt evidence; report link required
+FR-750,E4,ESSM_MAPPING §8,merchandise profit math; bundles; separate revenue rollups
+FR-800,E5,ESSM_MAPPING §5 and §9,monthly newsletter; official survey URL; status; Re-Raise new cycle
+FR-850,E5,ESSM_MAPPING §10,import preview; idempotent row fingerprint; export golden file
+FR-900,E5,PRD §10,permissions and audit for reports/export; next action / compliance KPIs
+FR-950,E2,E3,AI_MODEL_ROUTING; ARCHITECTURE,structured-output eval; prompt injection; worker has no send capability
