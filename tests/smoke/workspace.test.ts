@@ -43,6 +43,10 @@ function workspaceManifests(): { dir: string; manifest: PackageManifest }[] {
 // Agreed minimal M0-02 dependency set. Anything else must arrive through a later
 // issue with its own justification (AGENTS.md: no new dependencies without need).
 const ALLOWED_RUNTIME_DEPS = new Set(["next", "react", "react-dom"]);
+// M1-03 justification: zod validates partner API request bodies at the
+// server-side route boundary (AGENTS.md mandates Zod at all boundaries).
+// Scoped to @crm/web; any other package adding zod still fails this guard.
+const PACKAGE_EXTRA_RUNTIME_DEPS = new Map([["@crm/web", new Set(["zod"])]]);
 const ALLOWED_DEV_DEPS = new Set([
   "typescript",
   "vitest",
@@ -91,10 +95,11 @@ describe("M0-02 workspace scaffold", () => {
   it("adds no dependencies beyond the agreed minimal scaffold set", () => {
     for (const { manifest } of workspaceManifests()) {
       for (const [dep] of Object.entries(manifest.dependencies ?? {})) {
+        const extra = PACKAGE_EXTRA_RUNTIME_DEPS.get(manifest.name);
         expect(
-          ALLOWED_RUNTIME_DEPS,
+          ALLOWED_RUNTIME_DEPS.has(dep) || (extra?.has(dep) ?? false),
           `${manifest.name} runtime dep ${dep} is not in the M0-02 set`,
-        ).toContain(dep);
+        ).toBe(true);
       }
       for (const [dep] of Object.entries(manifest.devDependencies ?? {})) {
         expect(
