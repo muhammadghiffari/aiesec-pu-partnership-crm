@@ -11,4 +11,5 @@
 
 export const CORE_PACKAGE_NAME = "@crm/core" as const;
 
+export * from "./audit/index";
 export * from "./auth/index";
