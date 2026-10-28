@@ -43,3 +43,14 @@
 - Tests run against real PostgreSQL via PGlite (dev dependency of `@crm/db` only): diagram conformance parsed from the fixed XML, reversibility, and ~110 constraint/cardinality tests.
 - Interim decisions Q-13..Q-16 recorded in `docs/DECISIONS.md`. The fixed diagram is unchanged; Q-13 requests approval for one type deviation.
 
+### M1-04 — PartnershipCycle and five-stage lifecycle API (FR-200)
+
+- `packages/core/src/lifecycle/`: pure rules (`ESSM_STAGES`, `checkTransition`, `unmetGates`, waivable-gate set) and `createLifecycleService` over a `LifecycleRepository` port (no DB dependency; the Postgres repository is a follow-up that must share the audit transaction).
+- Stage moves are strictly forward and single-step: exactly 4 of 25 stage pairs are allowed. The caller cannot name a target stage; `advanceStage` takes the stage it expects and the service computes the only legal successor.
+- Hard prerequisites per stage (human Market Research with Proceed + evidence + verifier; sent proposal, meeting, final MoM; confirmed SnD + approved, independently approved and signed LoA; finished project with report link). Everything is rechecked inside the audited transaction.
+- Soft Sales Process gates can be waived only by a CRM Lead with a reason (`GATE_OVERRIDE` audit event); hard gates cannot be waived (Q-17).
+- Sales status, approach method and partnership Active/Break/Finish have separate operations that never move the stage; the Re-Raise decision is not written here (M5-03).
+- Every mutation is authorized (`cycle.write`/`cycle.read`) and audited through the M0-05/M0-06 services; a stage move and its audit event commit or roll back together.
+- Test helper change: `audit/test-support.ts` can now roll back an additional store (`extraDomain`).
+- Interim decisions Q-17..Q-19 recorded in `docs/DECISIONS.md`.
+
