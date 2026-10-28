@@ -6,7 +6,7 @@
 - **Domain core**: lifecycle state machine, RBAC policies, outreach gate, deterministic Rate Card calculations, revenue/merchandise calculations, checklist logic, audit-event construction.
 - **Database**: relational partner/cycle/contact data, versioned catalog, immutable snapshot values, job queue, append-only audit trail, import ledger.
 - **Worker**: bounded batch processing for research/draft jobs; validates all model outputs and writes only draft/job/result records. No outbound communication credentials.
-- **AI adapter**: configurable OpenAI-compatible provider adapter. Application runtime has separate model settings from ZCode/Hermes developer tools.
+- **AI adapter**: configurable OpenAI-compatible provider adapter. Application runtime has separate model settings from Hermes developer tools.
 - **Companion**: optional Chrome MV3 read-only/assisted integration; only after review and only if permitted. A manual research/contact workflow is a valid baseline and fallback.
 - **Document service**: renders MoM/LoA from approved tagged templates; signing remains external.
 - **ESSM adapter**: maps imported workbook tabs/headers to normalized entities and produces a validated export in approved column order.

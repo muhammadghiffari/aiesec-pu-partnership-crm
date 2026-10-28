@@ -18,7 +18,7 @@ Allow Kiro to ask for confirmation when it performs material external actions. D
 - In Kiro CLI V3, run `/model`, choose the exact model in the picker, and use its **Thinking/Effort** controls if available. `/effort medium` or `/effort high` changes the current session when that level is supported. Do not assume every model supports every level.
 - Kiro V3 Plan mode is separate from model effort. Toggle Plan mode with `Shift+Tab` for read-only inspection/plan; review it, then switch to Default mode for bounded execution.
 - The user's Kiro picker multipliers are relative to Auto=1.00x and may change: Qwen3 Coder Next 0.05x; MiniMax M2.5 0.25x; GLM-5 0.50x; Claude Sonnet 5.5 1.30x; Claude Opus 5.5 2.00x; GPT-5.6 Terra 2.20x; GPT-5.6 Sol 4.40x; other user-provided entries in `docs/AI_MODEL_ROUTING.md`. Verify the actual picker before choosing; these are user-observed values, not guarantees.
-- For ZCode and Hermes, choose the named model shown by that host. Set its High/Reasoning setting only if the host exposes it. If no effort control exists, use the listed model, narrow file scope, tests and reviewer; never claim a setting was set when it is unavailable.
+- For Hermes, choose the named model shown by that host. Set its High/Reasoning setting only if the host exposes it. If no effort control exists, use the listed model, narrow file scope, tests and reviewer; never claim a setting was set when it is unavailable.
 - High-risk logic (authorization, life-cycle gates, LoA separation of duties, pricing, actual revenue, data import/erasure) must not be implemented or approved solely by the cheapest model. Use a stronger model and independent reviewer.
 - Escalate after two failed attempts, contradictory behavior, unexplained test failures or any untested high-impact invariant. Save credits by reducing scope and context, not by lowering the quality bar.
 
@@ -27,12 +27,11 @@ Allow Kiro to ask for confirmation when it performs material external actions. D
 ### A. Muhammad Ghiffari — owner/architecture/domain
 
 - **Kiro CLI:** MiniMax M2.5 (0.25x), Medium for repository bootstrap and small routine work; Qwen3 Coder Next (0.05x), Low/Medium only for bounded validation/status/formatting; GLM-5 (0.50x), Medium for ordinary implementation if available; Claude Sonnet 5.5 (1.30x), High for architecture integration, difficult debugging and serious review; Claude Opus 5.5 (2.00x), XHigh only for unresolved, high-risk reasoning. GPT-5.6 Terra/Sol are escalation alternatives, not routine defaults.
-- **ZCode IDE:** GLM-5.3-Flash, Medium for docs, repetitive UI scaffolding and small test/fixture changes; GLM-5.3, High for schema, lifecycle, RBAC, approval integrity, Rate Card and money calculations.
 - **Owns:** decisions, shared schema lock, authorization and domain invariants, formula sign-off, merge/release. Do not edit the same files concurrently with another developer.
 
 ### B. Catalna — web UI/product flows/testing
 
-- **ZCode:** GLM-5.3-Flash, Medium for scoped forms/CRUD/accessibility polish; GLM-5.3, High for complex multi-component state, gated workflows, browser E2E or ambiguous integration.
+- **Kiro CLI:** GLM-5.3-Flash, Medium for scoped forms/CRUD/accessibility polish; GLM-5.3, High for complex multi-component state, gated workflows, browser E2E or ambiguous integration.
 - **ChatGPT/OpenAI:** for independent reviews of sensitive PRs, choose the strongest reasoning/coding model currently available in her model picker, set High/maximum appropriate reasoning if exposed, and review the diff rather than re-implementing it. The exact OpenAI model list was not supplied, so this playbook does not invent a model alias.
 - **Owns:** accessible UI, dashboard, user flows, Playwright/browser checks. Never treat hiding a button as server-side authorization.
 
@@ -99,7 +98,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M0-03 — CI baseline and quality checks
 
 - **Owner:** Catalna
-- **Model:** ZCode · GLM-5.3-Flash
+- **Model:** Kiro CLI · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
 - **Independent review:** Ghiffari: Kiro Qwen3 Coder Next, Low/Medium for bounded review
@@ -121,7 +120,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · DeepSeek-V4.1-Flash-1017
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, Medium
+- **Independent review:** Ghiffari: Kiro GLM-5.3, Medium
 - **Read:** `AGENTS.md; .env.example; docs/SECURITY_PRIVACY.md; .kiro/specs/E0-foundation/`
 
 **Prompt (paste after setting the model/effort):**
@@ -137,7 +136,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M0-05 — Authentication foundation and server-side RBAC
 
 - **Owner:** Ghiffari
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
 - **Independent review:** Catalna: ChatGPT, strongest available reasoning model, High for independent review
@@ -156,7 +155,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M0-06 — Append-only audit service
 
 - **Owner:** Ghiffari
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
 - **Independent review:** hicesse: Hermes Kimi-K3, High if available
@@ -175,7 +174,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M1-01 — Schema and migrations for diagram entities
 
 - **Owner:** Ghiffari
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
 - **Independent review:** Catalna: ChatGPT strongest reasoning model, High
@@ -197,7 +196,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3-Flash, Low/Medium
+- **Independent review:** Ghiffari: Kiro GLM-5.3-Flash, Low/Medium
 - **Read:** `docs/ESSM_MAPPING.md; docs/DATA_MODEL.md; AGENTS.md`
 
 **Prompt (paste after setting the model/effort):**
@@ -213,10 +212,10 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M1-03 — Partner/contact CRUD, search and deduplication
 
 - **Owner:** Catalna
-- **Model:** ZCode · GLM-5.3-Flash
+- **Model:** Kiro CLI · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, Medium
+- **Independent review:** Ghiffari: Kiro GLM-5.3, Medium
 - **Read:** `AGENTS.md; docs/PRD.md partner/contact requirements; docs/DATA_MODEL.md; .kiro/specs/E1-core-essm/`
 
 **Prompt (paste after setting the model/effort):**
@@ -232,7 +231,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M1-04 — PartnershipCycle and five-stage lifecycle API
 
 - **Owner:** Ghiffari
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
 - **Independent review:** Catalna: ChatGPT strongest reasoning model, High
@@ -251,10 +250,10 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M1-05 — ESSM Market Research form and proceed gate
 
 - **Owner:** Catalna
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, High
+- **Independent review:** Ghiffari: Kiro GLM-5.3, High
 - **Read:** `docs/ESSM_MAPPING.md; docs/DATA_MODEL.md; AGENTS.md; .kiro/specs/E1-core-essm/`
 
 **Prompt (paste after setting the model/effort):**
@@ -273,7 +272,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · DeepSeek-V4.1-Flash-1017
 - **Effort:** Medium/High
 - **Workflow mode:** Plan for workflow, then implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, Medium
+- **Independent review:** Ghiffari: Kiro GLM-5.3, Medium
 - **Read:** `AGENTS.md; docs/PRD.md; docs/ARCHITECTURE.md; .kiro/specs/E2-sales-outreach/`
 
 **Prompt (paste after setting the model/effort):**
@@ -292,7 +291,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, High
+- **Independent review:** Ghiffari: Kiro GLM-5.3, High
 - **Read:** `AGENTS.md; docs/SECURITY_PRIVACY.md; docs/PRD.md contact sourcing; .kiro/specs/E2-sales-outreach/`
 
 **Prompt (paste after setting the model/effort):**
@@ -327,7 +326,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M2-04 — Outreach linter and immutable approval hash
 
 - **Owner:** Ghiffari
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
 - **Independent review:** Catalna: ChatGPT strongest reasoning model, High
@@ -346,10 +345,10 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M2-05 — Assisted-send UX and response statuses
 
 - **Owner:** Catalna
-- **Model:** ZCode · GLM-5.3-Flash
+- **Model:** Kiro CLI · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, High
+- **Independent review:** Ghiffari: Kiro GLM-5.3, High
 - **Read:** `AGENTS.md; docs/PRD.md outreach requirements; .kiro/specs/E2-sales-outreach/`
 
 **Prompt (paste after setting the model/effort):**
@@ -365,7 +364,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M3-01 — Versioned Rate Card and benefit catalog
 
 - **Owner:** Ghiffari
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
 - **Independent review:** Catalna: ChatGPT strongest reasoning model, High
@@ -384,7 +383,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M3-02 — Packages, ProposalBenefit and pricing snapshots
 
 - **Owner:** Ghiffari
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
 - **Independent review:** hicesse: Hermes Kimi-K3, High; Catalna reviews UI
@@ -403,10 +402,10 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M3-03 — Sales meetings and official MoM export
 
 - **Owner:** Catalna
-- **Model:** ZCode · GLM-5.3-Flash
+- **Model:** Kiro CLI · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, Medium
+- **Independent review:** Ghiffari: Kiro GLM-5.3, Medium
 - **Read:** `docs/DATA_MODEL.md; docs/PRD.md meeting/MoM; .kiro/specs/E3-ratecard-sales-close/`
 
 **Prompt (paste after setting the model/effort):**
@@ -422,7 +421,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M3-04 — Structured Supply and Demand agreement gate
 
 - **Owner:** Ghiffari
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
 - **Independent review:** Catalna: ChatGPT strongest reasoning model, High
@@ -441,7 +440,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M3-05 — LoA templates, sequence, approval and signing record
 
 - **Owner:** Ghiffari
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
 - **Independent review:** Catalna: ChatGPT strongest reasoning model, High; owner sign-off required
@@ -460,10 +459,10 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M4-01 — Signed LoA starts implementation project
 
 - **Owner:** Catalna
-- **Model:** ZCode · GLM-5.3-Flash
+- **Model:** Kiro CLI · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, High
+- **Independent review:** Ghiffari: Kiro GLM-5.3, High
 - **Read:** `AGENTS.md; docs/PRD.md implementation; docs/DATA_MODEL.md; .kiro/specs/E4-implementation-revenue-merch/`
 
 **Prompt (paste after setting the model/effort):**
@@ -479,7 +478,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M4-02 — Financial and in-kind actual revenue records
 
 - **Owner:** Ghiffari
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
 - **Independent review:** Catalna: ChatGPT strongest reasoning model, High
@@ -501,7 +500,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · DeepSeek-V4.1-Flash-1017
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, Medium
+- **Independent review:** Ghiffari: Kiro GLM-5.3, Medium
 - **Read:** `AGENTS.md; docs/ESSM_MAPPING.md; docs/PRD.md report requirements; .kiro/specs/E4-implementation-revenue-merch/`
 
 **Prompt (paste after setting the model/effort):**
@@ -520,7 +519,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, High; schema lock if needed
+- **Independent review:** Ghiffari: Kiro GLM-5.3, High; schema lock if needed
 - **Read:** `AGENTS.md; docs/DATA_MODEL.md; docs/ESSM_MAPPING.md; fixed diagram; .kiro/specs/E4-implementation-revenue-merch/`
 
 **Prompt (paste after setting the model/effort):**
@@ -536,7 +535,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M4-05 — Financial formula and double-counting regression tests
 
 - **Owner:** Ghiffari
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Review then implementation
 - **Independent review:** hicesse: Hermes Kimi-K3, High
@@ -555,10 +554,10 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M5-01 — Partner engagement calendar and log
 
 - **Owner:** Catalna
-- **Model:** ZCode · GLM-5.3-Flash
+- **Model:** Kiro CLI · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, Medium
+- **Independent review:** Ghiffari: Kiro GLM-5.3, Medium
 - **Read:** `AGENTS.md; docs/ESSM_MAPPING.md; docs/PRD.md partner engagement; .kiro/specs/E5-engagement-survey-data/`
 
 **Prompt (paste after setting the model/effort):**
@@ -574,10 +573,10 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M5-02 — Official BD Post-Partnership Survey tracking
 
 - **Owner:** Catalna
-- **Model:** ZCode · GLM-5.3-Flash
+- **Model:** Kiro CLI · GLM-5.3-Flash
 - **Effort:** Medium
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, Medium
+- **Independent review:** Ghiffari: Kiro GLM-5.3, Medium
 - **Read:** `AGENTS.md; docs/ESSM_MAPPING.md; docs/PRD.md; .kiro/specs/E5-engagement-survey-data/`
 
 **Prompt (paste after setting the model/effort):**
@@ -593,7 +592,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M5-03 — Re-raise decision and new cycle linkage
 
 - **Owner:** Ghiffari
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
 - **Independent review:** Catalna: ChatGPT strongest reasoning model, High
@@ -615,7 +614,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · DeepSeek-V4.1-Flash-1017
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, High; approved workbook check
+- **Independent review:** Ghiffari: Kiro GLM-5.3, High; approved workbook check
 - **Read:** `docs/ESSM_MAPPING.md; docs/SECURITY_PRIVACY.md; docs/PRD.md import; .kiro/specs/E5-engagement-survey-data/`
 
 **Prompt (paste after setting the model/effort):**
@@ -634,7 +633,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 - **Model:** Hermes · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, High; independent second review
+- **Independent review:** Ghiffari: Kiro GLM-5.3, High; independent second review
 - **Read:** `docs/ESSM_MAPPING.md; docs/PRD.md export; .kiro/specs/E5-engagement-survey-data/`
 
 **Prompt (paste after setting the model/effort):**
@@ -650,10 +649,10 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M5-06 — Permission-controlled dashboard and handover exports
 
 - **Owner:** Catalna
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** Medium/High
 - **Workflow mode:** Implementation
-- **Independent review:** Ghiffari: ZCode GLM-5.3, Medium
+- **Independent review:** Ghiffari: Kiro GLM-5.3, Medium
 - **Read:** `AGENTS.md; docs/PRD.md reporting; docs/DATA_MODEL.md; .kiro/specs/E5-engagement-survey-data/`
 
 **Prompt (paste after setting the model/effort):**
@@ -669,7 +668,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M6-01 — Full authorization matrix and security review
 
 - **Owner:** Ghiffari
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation/review
 - **Independent review:** Catalna: ChatGPT strongest reasoning model, High; Kiro Sonnet 5.5 High if unresolved
@@ -726,7 +725,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M6-04 — Accessibility, performance and browser E2E
 
 - **Owner:** Catalna
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan then implementation
 - **Independent review:** Nemotron-3.5-Super-VL-120B-A12B via Hermes only for visual screenshot review; Ghiffari signs off
@@ -745,7 +744,7 @@ Add meaningful success and negative tests that prove the acceptance criteria. Ru
 ### M6-05 — Privacy, product-owner UAT and deployment decision
 
 - **Owner:** Ghiffari
-- **Model:** ZCode · GLM-5.3
+- **Model:** Kiro CLI · GLM-5.3
 - **Effort:** High
 - **Workflow mode:** Plan/review; no deploy without approval
 - **Independent review:** Catalna: ChatGPT strongest reasoning model, High; hicesse reviews runtime config

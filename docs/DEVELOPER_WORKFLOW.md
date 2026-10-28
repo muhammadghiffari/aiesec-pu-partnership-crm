@@ -4,7 +4,7 @@
 
 | Developer | Environment | Primary ownership | Must review |
 |---|---|---|---|
-| Muhammad Ghiffari (`@muhammadghiffari`) | Product owner; ZCode IDE (GLM-5.3 / GLM-5.3-Flash) | Product decisions; lifecycle/domain core; role policy; DB/schema lock; merge/release; ESSM UAT | Any auth/RBAC, lifecycle, data migration, Rate Card/financial calculation changes |
+| Muhammad Ghiffari (`@muhammadghiffari`) | Product owner; Kiro CLI (see AI_MODEL_ROUTING.md) | Product decisions; lifecycle/domain core; role policy; DB/schema lock; merge/release; ESSM UAT | Any auth/RBAC, lifecycle, data migration, Rate Card/financial calculation changes |
 | Catalna (confirm actual GitHub username) | Existing developer environment | Web UI flows, accessible components, dashboard and Playwright coverage (assign issue by issue) | Worker/API integration and ESSM user flows |
 | `hicesse` | Hermes; model inventory in `docs/AI_MODEL_ROUTING.md` | Worker/AI adapter, research jobs, import/export tooling or Companion tasks as assigned; operational docs/CI | UI/domain boundary, model safety and provider integration |
 

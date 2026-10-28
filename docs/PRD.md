@@ -294,9 +294,9 @@ Keep integrations behind adapters. Deployment target, live data region, SMTP/Gma
 
 ### Development-agent models vs product-runtime models
 
-These are separate concerns. Models that developers use inside ZCode IDE or Hermes are coding assistants and are not automatically product-runtime models. The application must not depend on local IDE logins or on these tools being installed on staff machines.
+These are separate concerns. Models that developers use inside Kiro CLI or Hermes are coding assistants and are not automatically product-runtime models. The application must not depend on local IDE logins or on these tools being installed on staff machines.
 
-Product runtime must use an explicit provider adapter configured by environment variables, with model ID and provider validated in staging. The user has indicated access to GLM-5.3 and GLM-5.3-Flash in ZCode IDE; that does not by itself establish API endpoint access or runtime licensing. Choose a runtime model only after a provider smoke test, cost test, and Indonesian-language/structured-output evaluation.
+Product runtime must use an explicit provider adapter configured by environment variables, with model ID and provider validated in staging. The user has access to GLM-5.3 and GLM-5.3-Flash via Kiro CLI; that does not by itself establish API endpoint access or runtime licensing. Choose a runtime model only after a provider smoke test, cost test, and Indonesian-language/structured-output evaluation.
 
 ### Human-control rules
 
