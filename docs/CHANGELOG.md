@@ -17,3 +17,12 @@
 - Biome scope expanded: M0-02's directory excludes (`docs`, `.github`, `.kiro`, `scripts`) replaced by file-type-aware handling (`ignoreUnknown` + `!**/*.md`); remaining exclusions documented in `docs/DEVELOPER_WORKFLOW.md`.
 - CI prerequisites, diagnostics and intentional exclusions documented in `docs/DEVELOPER_WORKFLOW.md` ("CI quality gates (M0-03)").
 - Superseded PR runs are cancelled via concurrency group; workflow permissions remain `contents: read`.
+
+### M0-05 — Authentication foundation and server-side RBAC (FR-100)
+
+- `packages/core/src/auth/`: Google ID-token verifier (RS256 via WebCrypto, injected JWKS, pinned algorithm, issuer/audience/expiry/email-verified/nonce checks), exact-email allowlist (deny by default, wildcards rejected), session service (hashed opaque tokens, per-request re-check of active flag, allowlist and role), central `authorize()` policy and `runAuthorized()` guard.
+- `CRM_LEAD` is a single permission set shared by TL BD and LCVP PD; `organizationalTitle` is never a policy input. LoA self-approval is denied for every role.
+- Dependency: `zod` added to `@crm/core` only (AGENTS.md boundary-validation rule); smoke test allowlist is scoped per package.
+- Interim policy choices recorded as Q-09..Q-11 in `docs/DECISIONS.md`.
+- Not included (by scope): config loading (M0-04), DB-backed user/session repositories (M1-01), HTTP cookie/CSRF wiring in `apps/web`, audit persistence (M0-06 consumes `onDecision`).
+

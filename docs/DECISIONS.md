@@ -33,6 +33,9 @@ Date baseline: 28 October 2026. Changes require product-owner approval and an AD
 | Q-06 | Runtime LLM access differs from coding-assistant IDE access | Runtime provider smoke test and evals required; local IDE availability is not runtime API authorization | AI integration milestone |
 | Q-07 | Catalna's exact GitHub handle is not provided | Preserve display name in docs; do not attempt invitation or create a handle by guessing | Product owner to confirm |
 | Q-08 | Current legal basis/retention/participant notice and Companion platform terms | Data minimization; DNC/erase path; Companion disabled unless approved and safe | Privacy/security review |
+| Q-09 | PRD §11 lists capabilities in prose; the exact action-level role matrix for `VIEWER` is not specified (contact PII, exports, audit log) | `VIEWER` is read-only on partner, cycle, rate card and reports only. No contact PII, internal notes, exports or audit access. `export.run` and `audit.read` are CRM Lead only. Source of truth: `packages/core/src/auth/policy.ts` and its independent matrix test | Product owner confirm before UAT |
+| Q-10 | PRD says BD staff "approve their own exact outbound content" but does not state which roles may export, import or override gates beyond "CRM Lead authorizes gate waivers" | `outreach.approve` is granted to `BD_STAFF` and `CRM_LEAD`; `gate.override`, `loa.approve`, `ratecard.edit`, `package.edit`, `import.run`, `user.manage` are lead-only | Product owner confirm before M2/M3 |
+| Q-11 | Session lifetime, cookie attributes and CSRF strategy are unspecified | Default 8h server-side session, opaque 256-bit token stored only as SHA-256 hash, account state and allowlist re-checked every request. HttpOnly/Secure/SameSite and CSRF are applied by the web layer and verified when it is wired | Security review (M6-01) |
 
 ## Superseded assumptions
 
