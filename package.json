@@ -1,0 +1,32 @@
+{
+  "name": "aiesec-pu-partnership-crm",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Partnership CRM for AIESEC in PU Business Development (implementation scaffold)",
+  "packageManager": "pnpm@10.15.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @crm/web dev",
+    "build": "pnpm -r build",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "check": "pnpm typecheck && pnpm lint && pnpm test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.3",
+    "@types/node": "26.6.5",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5",
+    "@crm/ai": "workspace:*",
+    "@crm/config": "workspace:*",
+    "@crm/core": "workspace:*",
+    "@crm/db": "workspace:*",
+    "@crm/docs": "workspace:*",
+    "@crm/worker": "workspace:*"
+  }
+}

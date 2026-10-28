@@ -1,0 +1,15 @@
+{
+  "name": "@crm/docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MoM/LoA DOCX generation from approved tagged templates (E3/M3-03, M3-05)",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
+  }
+}

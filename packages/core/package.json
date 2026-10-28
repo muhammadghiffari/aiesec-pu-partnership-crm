@@ -1,0 +1,18 @@
+{
+  "name": "@crm/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Domain core: lifecycle state machine, RBAC policies, gates, deterministic calculations (implemented in later FR issues)",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p ../../tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
+  }
+}
