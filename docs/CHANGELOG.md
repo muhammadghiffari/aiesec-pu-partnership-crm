@@ -54,3 +54,12 @@
 - Test helper change: `audit/test-support.ts` can now roll back an additional store (`extraDomain`).
 - Interim decisions Q-17..Q-19 recorded in `docs/DECISIONS.md`.
 
+### M2-01 — Prospecting criteria and research job workflow (FR-300..308, FR-950)
+
+- Migration 0006: `research_jobs` (idempotency key per user, attempt bound, lease, status/lease/finish constraints, error CODE only), `research_quotas`, `prospect_candidates` (drafts with 1-10 mandatory source URLs, separate unverified claims, review state) and a trigger that makes `target_criteria` versions immutable snapshots.
+- `packages/core/src/research/`: criteria versioning (CRM Lead), `enqueueJob` (idempotent, per-staff quota by Asia/Jakarta day), `setQuota`, `cancelJob`, human review (`acceptCandidate` requires an explicit decision for a flagged duplicate; `rejectCandidate` requires a reason) and a bounded worker (`runOnce`).
+- The worker has no session, audit-as-user, messaging, intake or market-research dependency; it only inserts PENDING drafts. A source scan test enforces this. AI disabled means nothing is claimed.
+- Provider output is untrusted: per-candidate Zod validation (source URLs http(s) without credentials, score range, bounded text, control characters stripped); candidates without sources are dropped and an answer with none valid fails the attempt.
+- Retry safety: exponential backoff, lease recovery after a crash, zombie-worker writes refused, completion ignores duplicates, attempt bound never exceeded.
+- Interim decisions Q-20..Q-22 recorded in `docs/DECISIONS.md`.
+
