@@ -134,19 +134,22 @@ export async function buildFixture(): Promise<Fixture> {
     verified_by: staff.user_id,
   });
   const cycle = await newCycle(db, partner.partner_id);
-  const card = await insert(db, "rate_cards", {
+  // Real lifecycle since migration 0009: create a DRAFT, add items, then activate (freezes it).
+  const draftCard = await insert(db, "rate_cards", {
     name: "Synthetic Rate Card",
     version: 1,
-    status: "ACTIVE",
     effective_from: "2026-01-01",
     owner_id: leadA.user_id,
   });
   const item = await insert(db, "rate_card_items", {
-    rate_card_id: card.rate_card_id,
+    rate_card_id: draftCard.rate_card_id,
     category: "BRANDING",
     benefit_name: "Logo placement",
     monetized_unit_value: 500000,
     unit: "slot",
+  });
+  const card = await update(db, "rate_cards", "rate_card_id", draftCard.rate_card_id, {
+    status: "ACTIVE",
   });
   const proposal = await insert(db, "proposals", {
     cycle_id: cycle.cycle_id,
