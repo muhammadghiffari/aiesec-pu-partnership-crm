@@ -26,3 +26,11 @@
 - Interim policy choices recorded as Q-09..Q-11 in `docs/DECISIONS.md`.
 - Not included (by scope): config loading (M0-04), DB-backed user/session repositories (M1-01), HTTP cookie/CSRF wiring in `apps/web`, audit persistence (M0-06 consumes `onDecision`).
 
+### M2-03 — AI adapter and grounded-output evaluation (FR-950)
+
+- `packages/ai`: config mapping from the M0-04 `LLM_*` contract (no second env loader; key never in errors or `describeLlmConfig`), an OpenAI-compatible transport (JSON mode, no tools/functions, status-code error mapping without bodies), and `createLlmAdapter().generate(template, input)` with strict input schemas, deadline per attempt (started after a concurrency slot is held), retries for retryable transport errors only, one schema-repair attempt, bounded concurrency, spend cap and metadata (template id/version, provider, model, attempts, latency, tokens, cost, prompt SHA-256; never prompt text or key).
+- Versioned templates `research.candidates@1` and `outreach.draft@1`: untrusted source text is fenced and neutralised; deterministic checks for source grounding, unsupported claims, language, formal Indonesian tone, secrets in output and foreign links. DNC recipients are refused before any model call.
+- Synthetic evaluation set (17 cases: grounding, formal Indonesian/English, malformed output, prompt injection, DNC, unsupported claims) and a runner that also accepts a live transport for staging.
+- Transport failures and quality failures are reported as different result kinds.
+- Interim decisions Q-25, Q-26 recorded.
+
