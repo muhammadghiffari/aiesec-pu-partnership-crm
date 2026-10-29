@@ -70,3 +70,10 @@
 - Enrichment is off unless a provider is configured; one partner per request; no scraping, crawling or connection requests (see `docs/CONTACT_SOURCING.md`).
 - Interim decisions Q-23, Q-24 recorded in `docs/DECISIONS.md`.
 
+### M2-04 — Outreach linter and immutable approval hash (FR-400..403)
+
+- Migration 0008: messages bound to an exact `contact_channels` row (+ subject, language, AI provenance), `crm_outreach_approval_hash()` recomputed by PostgreSQL, guard trigger now requires a verified channel row of the right contact/type, an active non-viewer approver and a matching hash, and clears the approval on any subject/body/channel/recipient change.
+- `packages/core/src/outreach/`: `approvalHash` (versioned, length-prefixed, UTF-8, constant-time compare), deterministic `lintOutreach` v1 (13 error rules, 4 warnings), and a service with `createDraft`, `editDraft`, `previewApproval`, `approve` (readiness + lint + reviewed hash) and `confirmSent` (re-derives the hash; blocks drift/DNC/lost verification). No sending code exists.
+- M1-01 outreach DB tests updated for the stricter guard.
+- Interim decisions Q-27..Q-29 recorded.
+

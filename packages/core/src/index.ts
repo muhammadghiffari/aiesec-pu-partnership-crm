@@ -15,4 +15,5 @@ export * from "./audit/index";
 export * from "./auth/index";
 export * from "./contacts/index";
 export * from "./lifecycle/index";
+export * from "./outreach/index";
 export * from "./research/index";

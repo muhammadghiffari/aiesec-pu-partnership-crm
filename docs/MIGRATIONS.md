@@ -20,6 +20,7 @@ There is deliberately no ORM and no second schema definition. The runner takes a
 | 5 | `user_sessions` | session store for M0-05 (token hash only) |
 | 6 | `research_jobs` | M2-01: immutable criteria snapshots (trigger), research job queue with lease/idempotency/attempt bounds, per-user quotas, prospect candidate drafts |
 | 7 | `contact_verification` | M2-02: `contact_channels` (canonical, immutable address with its own source and verification) and `contact_candidates` (provenance-required, human-reviewed) |
+| 8 | `outreach_approval` | M2-04: outreach messages bound to an exact `contact_channels` row, subject/language/AI provenance, DB recomputation of the approval hash, stricter guard trigger |
 
 ## Rules
 
@@ -54,3 +55,11 @@ The domain services in `@crm/core` remain the primary enforcement and own user-f
 - The application database role must have `INSERT, SELECT` only on `audit_log` (REVOKE `UPDATE, DELETE, TRUNCATE`); a table owner or superuser can still drop triggers, so migrations must run under a separate role (M6-03 / ADR 002).
 - Prevent AI/worker roles from writing `market_research` (human-only scores and Proceed): grant them `prospecting_records` and job tables only.
 - Implement `AuditedTransaction` (see `packages/core/src/audit`) with a real DB transaction that spans domain writes and the `audit_log` insert.
+
+## Migration 0008 notes (M2-04)
+
+- **Backfill:** existing `outreach_messages` rows keep `channel_id = NULL`. They remain valid drafts but cannot be approved or sent until a channel row is set; there is no automatic guess of the recipient channel.
+- **Behaviour change in the guard:** APPROVED/SENT now require a VERIFIED `contact_channels` row of the same contact and channel type, an active approver who is not a VIEWER, and `approved_content_hash` equal to the hash the database recomputes. M1-01's outreach tests were updated to use real hashes and channel rows.
+- **Hash parity:** `crm_outreach_approval_hash()` must stay byte-identical to `packages/core/src/outreach/hash.ts` (`APPROVAL_HASH_VERSION`). `integrity-outreach.test.ts` checks multi-byte text, null/empty subjects and field-injection strings. Changing the canonical form needs a new version and a migration that invalidates open approvals.
+- **Rollback:** `down` re-installs the exact 0002 guard function (extracted from migration 0002) and drops the columns, functions and constraints; tested.
+
