@@ -4,19 +4,25 @@
  */
 
 import { NextResponse } from "next/server";
-import { getPartnerService } from "@/features/partners/mock-service";
-import { principalFromRequest } from "@/features/partners/principal";
+import {
+  getPartnerPrincipal,
+  getPartnerService,
+  PartnerBackendUnavailableError,
+} from "@/features/partners/backend";
 import { PartnerAccessDeniedError } from "@/features/partners/types";
 
 type PatchBody = { kind: "partner" | "verify" | "dnc" } & Record<string, unknown>;
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
-    const partner = await getPartnerService().getById(principalFromRequest(request), id);
+    const partner = await getPartnerService().getById(getPartnerPrincipal(), id);
     if (!partner) return NextResponse.json({ error: "not_found" }, { status: 404 });
     return NextResponse.json({ partner });
   } catch (error) {
+    if (error instanceof PartnerBackendUnavailableError) {
+      return NextResponse.json({ error: "service_unavailable" }, { status: 503 });
+    }
     if (error instanceof PartnerAccessDeniedError) {
       return NextResponse.json({ error: "access_denied" }, { status: 403 });
     }
@@ -32,9 +38,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   } catch {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
-  const service = getPartnerService();
-  const principal = principalFromRequest(request);
   try {
+    const service = getPartnerService();
+    const principal = getPartnerPrincipal();
     const result =
       body.kind === "verify"
         ? await service.setContactVerification(principal, id, body)
@@ -50,6 +56,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
     return NextResponse.json({ error: result.error }, { status: 403 });
   } catch (error) {
+    if (error instanceof PartnerBackendUnavailableError) {
+      return NextResponse.json({ error: "service_unavailable" }, { status: 503 });
+    }
     if (error instanceof PartnerAccessDeniedError) {
       return NextResponse.json({ error: "access_denied" }, { status: 403 });
     }

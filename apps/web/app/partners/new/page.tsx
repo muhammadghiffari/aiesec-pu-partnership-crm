@@ -1,6 +1,5 @@
 /** /partners/new — accessible partner creation (M1-03). */
 import type { Metadata } from "next";
-import { PartnerForm } from "@/features/partners/PartnerForm";
 
 export const metadata: Metadata = { title: "Add partner — CRM" };
 
@@ -11,7 +10,10 @@ export default function NewPartnerPage() {
       <p>
         <a href="/partners">Back to the partner list</a>
       </p>
-      <PartnerForm />
+      <p role="alert">
+        Partner creation is temporarily unavailable. No changes can be saved until the authenticated
+        backend is connected.
+      </p>
     </main>
   );
 }

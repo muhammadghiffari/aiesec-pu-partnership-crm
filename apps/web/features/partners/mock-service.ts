@@ -1,7 +1,6 @@
 /**
- * In-memory mock implementation of the M1-03 PartnerService contract.
- * Synthetic data only (example.invalid). Replaced by the real M1-01-backed
- * implementation without UI changes: see getPartnerService().
+ * Test-only in-memory implementation of the draft M1-03 PartnerService contract.
+ * Synthetic data only (example.invalid). Never import from production routes/pages.
  */
 import { randomUUID } from "node:crypto";
 import {
@@ -271,15 +270,4 @@ export function syntheticPartners(): Partner[] {
       ],
     },
   ];
-}
-
-let singleton: PartnerService | null = null;
-
-/**
- * UI rebinding point: swap the mock for the real M1-01/M1-04-backed service
- * here; no page or component code changes.
- */
-export function getPartnerService(): PartnerService {
-  singleton ??= new MockPartnerService();
-  return singleton;
 }

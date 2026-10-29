@@ -1,5 +1,23 @@
 # Handover and Release Checklist
 
+## M1-03 continuation blocker (29 October 2026)
+
+PR #5 remains draft. M1-04 includes the Partner/Contact tables and central auth/audit
+contracts, but no persisted Partner/Contact repository or domain service, no database
+session/user adapter, and no authenticated web session/cookie integration. The M1-03
+mock service is now test-only; production pages show an unavailable state and API
+requests return 503 rather than reading fixtures or accepting a development principal.
+This is **not** completed CRUD and must not be described as production-ready.
+
+Before enabling the retained partner/contact components: reconcile Q-20 in
+`docs/DECISIONS.md`; provide the real Partner/Contact service in `packages/core`,
+database repository plus atomic audit transaction, web session store/cookie/CSRF
+integration and server-side `partner.read`/`partner.write`/`contact.read`/
+`contact.write` checks. Then wire API and server pages through that service, complete
+create/edit/contact flows with server-side tests, and run the walkthrough on a
+supported Node version with an authorized synthetic test database. No schema change
+or seed data was added by this continuation.
+
 ## Repository handover
 
 - [ ] Private repository owned by `muhammadghiffari` created and initial pack pushed.

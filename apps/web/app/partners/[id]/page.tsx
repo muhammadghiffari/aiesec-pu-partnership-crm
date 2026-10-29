@@ -5,24 +5,39 @@
  */
 
 import type { Metadata } from "next";
-import { headers } from "next/headers";
+import {
+  getPartnerPrincipal,
+  getPartnerService,
+  PartnerBackendUnavailableError,
+} from "@/features/partners/backend";
 import { ContactActions } from "@/features/partners/ContactActions";
-import { getPartnerService } from "@/features/partners/mock-service";
-import { principalFromHeaderGetter } from "@/features/partners/principal";
 import { ESSM_INDUSTRIES, PartnerAccessDeniedError } from "@/features/partners/types";
 
 export const metadata: Metadata = { title: "Partner — CRM" };
 
 export default async function PartnerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const headerList = await headers();
-  const principal = principalFromHeaderGetter((name) => headerList.get(name));
   let partner = null;
   let denied = false;
+  let unavailable = false;
   try {
-    partner = await getPartnerService().getById(principal, id);
+    partner = await getPartnerService().getById(getPartnerPrincipal(), id);
   } catch (error) {
     if (error instanceof PartnerAccessDeniedError) denied = true;
+    else if (error instanceof PartnerBackendUnavailableError) unavailable = true;
+  }
+
+  if (unavailable) {
+    return (
+      <main>
+        <h1>Partner</h1>
+        <p role="alert">
+          Partner records are temporarily unavailable. No changes can be saved. Please try again
+          after the backend is connected.
+        </p>
+        <a href="/partners">Back to the partner list</a>
+      </main>
+    );
   }
 
   if (denied) {

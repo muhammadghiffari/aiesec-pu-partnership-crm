@@ -1,11 +1,10 @@
 /**
- * M1-03 partner/contact feature contract (mock-boundary slice).
+ * M1-03 draft partner/contact feature contract (test fixture slice).
  *
  * The fixed diagram (Partner, Contact, IndustryCategory) and PRD FR-200 define
- * the domain shape. The persistence layer arrives with M1-01; until then this
- * module defines the SERVICE CONTRACT the UI codes against and an in-memory
- * mock implementation with synthetic data only. When the real schema/services
- * land, the UI rebinding point is `getPartnerService()` — no UI code changes.
+ * the domain shape. M1-01 provides tables, not a persisted partner service;
+ * this draft differs from migration 0001 (see DECISIONS Q-20). Until reconciled,
+ * production access fails closed in backend.ts; tests alone use mock-service.ts.
  * This file must stay JSX-free so the root vitest suite can test it.
  */
 import { z } from "zod";
@@ -154,9 +153,7 @@ export const dncInputSchema = z.object({
 });
 
 /**
- * The UI's single service boundary. M1-01/M1-04 will provide the real
- * implementation backed by Postgres and the audit service; the mock below
- * matches this interface exactly.
+ * Draft UI service contract; not yet reconciled with the persisted schema.
  */
 export interface PartnerService {
   search(
@@ -180,7 +177,7 @@ export interface PartnerService {
   ): Promise<PartnerResult<Contact>>;
 }
 
-/** Authorization contract. M0-05 replaces the implementation, not the call sites. */
+/** Draft mock-only authorization; production uses M0-05 auth policy once wired. */
 export function canPerform(principal: PartnerPrincipal, action: "read" | "write"): boolean {
   if (!principal.active || principal.email === null) return false;
   if (principal.role === "NONE") return false;
