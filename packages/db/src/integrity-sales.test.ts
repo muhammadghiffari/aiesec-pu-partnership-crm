@@ -617,7 +617,28 @@ describe("outreach: approval hash invalidation, DNC and verified-recipient gates
 });
 
 describe("rate card, packages and proposals", () => {
-  it("catalog versions are unique per name and only one version can be ACTIVE", async () => {
+  // Since migration 0009 only DRAFT versions are editable, so tests that build catalog rows use
+  // a fresh draft "sandbox" card; the ACTIVE fixture card is used to check it is frozen.
+  async function sandbox(extra: Row = {}): Promise<Row> {
+    return insert(f.db, "rate_cards", {
+      name: uniq("Sandbox Card"),
+      version: 1,
+      effective_from: "2026-01-01",
+      owner_id: f.leadA.user_id,
+      ...extra,
+    });
+  }
+  const sandboxItem = (card: Row, extra: Row = {}) =>
+    insert(f.db, "rate_card_items", {
+      rate_card_id: card.rate_card_id,
+      category: "BRANDING",
+      benefit_name: uniq("Benefit"),
+      monetized_unit_value: 100000,
+      unit: "slot",
+      ...extra,
+    });
+
+  it("versions are consecutive per name, start as DRAFT, and at most one can be a draft or ACTIVE", async () => {
     await expectDbError(
       insert(f.db, "rate_cards", {
         name: f.card.name,
@@ -625,7 +646,7 @@ describe("rate card, packages and proposals", () => {
         effective_from: "2026-01-01",
         owner_id: f.leadA.user_id,
       }),
-      "rate_cards_name_version_key",
+      /rate_cards_name_version_key|consecutive/,
     );
     await expectDbError(
       insert(f.db, "rate_cards", {
@@ -635,7 +656,16 @@ describe("rate card, packages and proposals", () => {
         effective_from: "2027-01-01",
         owner_id: f.leadA.user_id,
       }),
-      "rate_cards_one_active_key",
+      "starts as DRAFT",
+    );
+    await expectDbError(
+      insert(f.db, "rate_cards", {
+        name: f.card.name,
+        version: 3,
+        effective_from: "2027-01-01",
+        owner_id: f.leadA.user_id,
+      }),
+      "consecutive",
     );
     const v2 = await insert(f.db, "rate_cards", {
       name: f.card.name,
@@ -644,19 +674,20 @@ describe("rate card, packages and proposals", () => {
       owner_id: f.leadA.user_id,
     });
     expect(v2.status).toBe("DRAFT"); // a new version coexists with the historic one
+    await expectDbError(
+      insert(f.db, "rate_cards", {
+        name: f.card.name,
+        version: 3,
+        effective_from: "2027-06-01",
+        owner_id: f.leadA.user_id,
+      }),
+      "rate_cards_one_draft_key",
+    );
   });
 
   it("rejects negative values, bad periods and non-3-letter currencies", async () => {
-    await expectDbError(
-      insert(f.db, "rate_card_items", {
-        rate_card_id: f.card.rate_card_id,
-        category: "BRANDING",
-        benefit_name: "Negative",
-        monetized_unit_value: -1,
-        unit: "slot",
-      }),
-      "monetized_unit_value",
-    );
+    const card = await sandbox();
+    await expectDbError(sandboxItem(card, { monetized_unit_value: -1 }), "monetized_unit_value");
     await expectDbError(
       insert(f.db, "rate_cards", {
         name: uniq("c"),
@@ -680,38 +711,27 @@ describe("rate card, packages and proposals", () => {
   });
 
   it("items need an existing benefit category and are unique per card", async () => {
+    const card = await sandbox();
+    const item = await sandboxItem(card);
+    await expectDbError(sandboxItem(card, { category: "NOPE" }), "foreign key");
     await expectDbError(
-      insert(f.db, "rate_card_items", {
-        rate_card_id: f.card.rate_card_id,
-        category: "NOPE",
-        benefit_name: "x",
-        monetized_unit_value: 1,
-        unit: "slot",
-      }),
-      "foreign key",
-    );
-    await expectDbError(
-      insert(f.db, "rate_card_items", {
-        rate_card_id: f.card.rate_card_id,
-        category: "BRANDING",
-        benefit_name: f.item.benefit_name,
-        monetized_unit_value: 1,
-        unit: "slot",
-      }),
+      sandboxItem(card, { benefit_name: item.benefit_name }),
       "rate_card_items_unique_benefit",
     );
   });
 
   it("package benefits are many-to-many but cannot mix rate-card versions or repeat a benefit", async () => {
+    const card = await sandbox();
+    const item = await sandboxItem(card);
     const pkg = await insert(f.db, "rate_card_packages", {
-      rate_card_id: f.card.rate_card_id,
+      rate_card_id: card.rate_card_id,
       package_name: uniq("Community"),
       listed_price: 500000,
     });
     const link = {
       package_id: pkg.package_id,
-      rate_card_item_id: f.item.rate_card_item_id,
-      rate_card_id: f.card.rate_card_id,
+      rate_card_item_id: item.rate_card_item_id,
+      rate_card_id: card.rate_card_id,
       included_qty: 2,
     };
     await insert(f.db, "rate_card_package_benefits", link);
@@ -720,41 +740,32 @@ describe("rate card, packages and proposals", () => {
       "package_benefits_unique",
     );
 
-    const v2 = await insert(f.db, "rate_cards", {
-      name: f.card.name,
-      version: uniq("v").length + 10,
-      effective_from: "2028-01-01",
-      owner_id: f.leadA.user_id,
-    });
-    const v2item = await insert(f.db, "rate_card_items", {
-      rate_card_id: v2.rate_card_id,
-      category: "BRANDING",
-      benefit_name: "Other version item",
-      monetized_unit_value: 1,
-      unit: "slot",
-    });
+    const other = await sandbox();
+    const otherItem = await sandboxItem(other);
     await expectDbError(
       insert(f.db, "rate_card_package_benefits", {
         package_id: pkg.package_id,
-        rate_card_item_id: v2item.rate_card_item_id,
-        rate_card_id: f.card.rate_card_id,
+        rate_card_item_id: otherItem.rate_card_item_id,
+        rate_card_id: card.rate_card_id,
         included_qty: 1,
       }),
       "package_benefits_item_fk",
     );
+    const second = await sandboxItem(card);
     await expectDbError(
       insert(f.db, "rate_card_package_benefits", {
         ...link,
-        rate_card_item_id: f.item.rate_card_item_id,
+        rate_card_item_id: second.rate_card_item_id,
         included_qty: 0,
       }),
-      /included_qty|package_benefits_unique/,
+      "included_qty",
     );
   });
 
   it("pricing mode and package reference are consistent", async () => {
+    const card = await sandbox();
     const pkg = await insert(f.db, "rate_card_packages", {
-      rate_card_id: f.card.rate_card_id,
+      rate_card_id: card.rate_card_id,
       package_name: uniq("Brand"),
       listed_price: 1500000,
     });
@@ -836,7 +847,7 @@ describe("rate card, packages and proposals", () => {
     );
   });
 
-  it("a historic proposal line does not change when the live catalog value changes", async () => {
+  it("a historic proposal line is untouched: the ACTIVE catalog cannot be edited, and a new version leaves it alone", async () => {
     const p = await insert(f.db, "proposals", {
       cycle_id: f.cycle.cycle_id,
       pricing_mode: "CUSTOM",
@@ -853,17 +864,21 @@ describe("rate card, packages and proposals", () => {
       unit_snapshot: "slot",
       rate_card_version_snapshot: 1,
     });
-    await update(f.db, "rate_card_items", "rate_card_item_id", f.item.rate_card_item_id, {
-      monetized_unit_value: 900000,
-    });
+    // The live (ACTIVE) version cannot be edited at all...
+    await expectDbError(
+      update(f.db, "rate_card_items", "rate_card_item_id", f.item.rate_card_item_id, {
+        monetized_unit_value: 900000,
+      }),
+      "historic rate card versions are immutable",
+    );
+    // ...and a new draft version with a different value does not reach the stored snapshot.
+    const draft = await sandbox();
+    await sandboxItem(draft, { monetized_unit_value: 900000, benefit_name: "Logo placement" });
     const { rows } = await f.db.query<Row>(
       "SELECT agreed_unit_value, line_total_value FROM proposal_benefits WHERE proposal_benefit_id = $1",
       [line.proposal_benefit_id],
     );
     expect(rows[0]).toEqual({ agreed_unit_value: 500000, line_total_value: 500000 });
-    await update(f.db, "rate_card_items", "rate_card_item_id", f.item.rate_card_item_id, {
-      monetized_unit_value: 500000,
-    });
   });
 
   it("an owner is required and must exist", async () => {

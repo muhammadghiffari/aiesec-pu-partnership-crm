@@ -77,3 +77,10 @@
 - M1-01 outreach DB tests updated for the stricter guard.
 - Interim decisions Q-27..Q-29 recorded.
 
+### M3-01 — Versioned Rate Card and benefit catalog (FR-500)
+
+- Migration 0009: version lifecycle trigger (DRAFT -> ACTIVE -> RETIRED; consecutive versions; one draft and one active per name; no overlapping windows; deletes only for drafts), items/packages/package benefits editable only while their version is a DRAFT, `value_status` PROPOSED/CONFIRMED with confirmer and time, and derived assessment values forced NULL until the ESSM formula is confirmed (Q-01).
+- `packages/core/src/ratecard/`: CRM Lead service for draft versions (optionally copied, values reset to PROPOSED), items (integer rupiah, categories, duplicates), confirmation, packages and package benefits (no cross-version references, a benefit counts once), activation (items required, unconfirmed values need acknowledgement, retires the previous version and ends its window the day before) and read/`findEffectiveVersion` by date for pricing (M3-02).
+- M1-01's rate card and fixture tests updated to the versioned lifecycle.
+- Interim decisions Q-30..Q-32 recorded. The ESSM scoring formula is not implemented anywhere.
+
