@@ -4,27 +4,34 @@
  * by the service before any data is read.
  */
 
+import { authorize, ESSM_INDUSTRIES, type PartnerRecord } from "@crm/core";
 import type { Metadata } from "next";
-import {
-  getPartnerPrincipal,
-  getPartnerService,
-  PartnerBackendUnavailableError,
-} from "@/features/partners/backend";
+import { cookies } from "next/headers";
+import { PartnerBackendUnavailableError, withPartnerBackend } from "@/features/partners/backend";
 import { ContactActions } from "@/features/partners/ContactActions";
-import { ESSM_INDUSTRIES, PartnerAccessDeniedError } from "@/features/partners/types";
+import { ContactForm } from "@/features/partners/ContactForm";
 
 export const metadata: Metadata = { title: "Partner — CRM" };
 
 export default async function PartnerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  let partner = null;
+  let partner: PartnerRecord | null = null;
   let denied = false;
+  let canWritePartner = false;
+  let canWriteContact = false;
   let unavailable = false;
   try {
-    partner = await getPartnerService().getById(getPartnerPrincipal(), id);
+    const token = (await cookies()).get("crm_session")?.value;
+    const result = await withPartnerBackend(({ partners }) => partners.getById(token, id));
+    if (result.ok) {
+      partner = result.value;
+      canWritePartner = authorize(result.principal, "partner.write").ok;
+      canWriteContact = authorize(result.principal, "contact.write").ok;
+    } else if (result.httpStatus === 401 || result.httpStatus === 403) denied = true;
+    else if (result.httpStatus !== 404 && result.httpStatus !== 422) unavailable = true;
   } catch (error) {
-    if (error instanceof PartnerAccessDeniedError) denied = true;
-    else if (error instanceof PartnerBackendUnavailableError) unavailable = true;
+    if (error instanceof PartnerBackendUnavailableError) unavailable = true;
+    else throw error;
   }
 
   if (unavailable) {
@@ -68,6 +75,11 @@ export default async function PartnerDetailPage({ params }: { params: Promise<{ 
       <p>
         <a href="/partners">Back to the partner list</a>
       </p>
+      {canWritePartner && (
+        <p>
+          <a href={`/partners/${partner.id}/edit`}>Edit partner</a>
+        </p>
+      )}
       <dl>
         <dt>ESSM industry category</dt>
         <dd>{industryLabel ?? partner.industry}</dd>
@@ -84,7 +96,7 @@ export default async function PartnerDetailPage({ params }: { params: Promise<{ 
           ) : (
             partner.sourceTier
           )}{" "}
-          — {partner.lawfulBasisNote}
+          — {partner.sourceDescription}
         </dd>
         <dt>Created</dt>
         <dd>
@@ -96,6 +108,7 @@ export default async function PartnerDetailPage({ params }: { params: Promise<{ 
 
       <section aria-labelledby="contacts-heading">
         <h2 id="contacts-heading">Contacts</h2>
+        {canWriteContact && <ContactForm partnerId={partner.id} />}
         {partner.contacts.length === 0 ? (
           <p role="status">No contacts recorded yet.</p>
         ) : (
@@ -109,11 +122,13 @@ export default async function PartnerDetailPage({ params }: { params: Promise<{ 
                 <dt>Title</dt>
                 <dd>{contact.title ?? "—"}</dd>
                 <dt>Email</dt>
-                <dd>{contact.email}</dd>
+                <dd>{contact.email ?? "—"}</dd>
                 <dt>Phone / WhatsApp</dt>
                 <dd>{contact.phone ?? "—"}</dd>
                 <dt>Verification</dt>
                 <dd>{contact.verification}</dd>
+                <dt>Do-not-contact reason</dt>
+                <dd>{contact.dncReason ?? "—"}</dd>
                 <dt>Provenance</dt>
                 <dd>
                   {contact.sourceTier}
@@ -128,13 +143,16 @@ export default async function PartnerDetailPage({ params }: { params: Promise<{ 
                   — {contact.lawfulBasisNote}
                 </dd>
               </dl>
-              <ContactActions
-                partnerId={partner.id}
-                contactId={contact.id}
-                contactName={contact.name}
-                currentVerification={contact.verification}
-                currentDnc={contact.doNotContact}
-              />
+              {canWriteContact && <ContactForm partnerId={partner.id} initial={contact} />}
+              {canWriteContact && (
+                <ContactActions
+                  partnerId={partner.id}
+                  contactId={contact.id}
+                  contactName={contact.name}
+                  currentVerification={contact.verification}
+                  currentDnc={contact.doNotContact}
+                />
+              )}
             </article>
           ))
         )}

@@ -3,23 +3,19 @@
  * Server component: receives already-authorized data; the API/service layer
  * performed the server-side authorization.
  */
-import { ESSM_INDUSTRIES, type IndustryCode, type Partner } from "./types";
-
-const VERIFICATION_LABELS: Record<string, string> = {
-  verified: "Verified",
-  pending: "Verification pending",
-  unverified: "Unverified",
-  failed: "Verification failed",
-};
+import { ESSM_INDUSTRIES, type IndustryCode, type PartnerRecord } from "@crm/core";
+import { contactSummary } from "./contact-summary";
 
 export function PartnerSearchList({
   partners,
   query,
   industry,
+  canWrite,
 }: {
-  partners: Partner[];
+  partners: PartnerRecord[];
   query: string;
   industry: IndustryCode | null;
+  canWrite: boolean;
 }) {
   return (
     <section aria-labelledby="partners-heading">
@@ -45,9 +41,11 @@ export function PartnerSearchList({
         </form>
       </search>
 
-      <p>
-        <a href="/partners/new">Add a new partner</a>
-      </p>
+      {canWrite && (
+        <p>
+          <a href="/partners/new">Add a new partner</a>
+        </p>
+      )}
 
       {partners.length === 0 ? (
         <p role="status">No partners match this search. Adjust the filters or add a new partner.</p>
@@ -67,7 +65,7 @@ export function PartnerSearchList({
           </thead>
           <tbody>
             {partners.map((partner) => {
-              const primary = partner.contacts[0];
+              const summary = contactSummary(partner.contacts);
               return (
                 <tr key={partner.id}>
                   <th scope="row">
@@ -78,8 +76,8 @@ export function PartnerSearchList({
                       partner.industry}
                   </td>
                   <td>{partner.websiteDomain ?? "—"}</td>
-                  <td>{primary ? VERIFICATION_LABELS[primary.verification] : "No contact yet"}</td>
-                  <td>{primary?.doNotContact ? "Do not contact" : "—"}</td>
+                  <td>{summary.verification}</td>
+                  <td>{summary.doNotContact}</td>
                 </tr>
               );
             })}

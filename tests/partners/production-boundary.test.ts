@@ -6,19 +6,101 @@ import {
 } from "../../apps/web/app/api/partners/[id]/route";
 import { POST as createPartner, GET as listPartners } from "../../apps/web/app/api/partners/route";
 import {
-  getPartnerService,
+  createPersistedBackend,
   PartnerBackendUnavailableError,
+  readSessionCookie,
+  withPartnerBackend,
 } from "../../apps/web/features/partners/backend";
 import { MockPartnerService } from "../../apps/web/features/partners/mock-service";
+import { ESSM_INDUSTRIES as uiCategories } from "../../apps/web/features/partners/types";
+import { ESSM_INDUSTRIES as domainCategories } from "../../packages/core/src/partners/models";
+import { freshDb, insert } from "../../packages/db/src/test-support";
 
 describe("production partner boundary", () => {
-  it("fails closed while no persisted repository and session wiring exist", () => {
-    expect(() => getPartnerService()).toThrow(PartnerBackendUnavailableError);
+  it("shares the single official industry list with the domain", () => {
+    expect(uiCategories).toBe(domainCategories);
+  });
+  it("only reads the opaque session cookie, never a development principal header", () => {
+    expect(readSessionCookie(new Headers({ "x-dev-principal-role": "CRM_LEAD" }))).toBeNull();
+    expect(
+      readSessionCookie(new Headers({ cookie: "other=ignored; crm_session=opaque-token" })),
+    ).toBe("opaque-token");
+  });
+  it("composes the real persisted session and audited partner service", async () => {
+    const db = await freshDb();
+    try {
+      await insert(db, "users", {
+        email: "lead@example.invalid",
+        name: "Synthetic Lead",
+        access_role: "CRM_LEAD",
+      });
+      await insert(db, "industry_categories", { code: "EDUCATION", name: "Education" });
+      const app = createPersistedBackend(db, {
+        identity: {
+          verify: async () => ({
+            subject: "synthetic",
+            email: "lead@example.invalid",
+            emailVerified: true,
+          }),
+        },
+        allowlist: "lead@example.invalid",
+      });
+      const signed = await app.sessions.signIn("synthetic-only-test-token");
+      if (!signed.ok) throw new Error("sign-in rejected");
+      const result = await app.partners.create(signed.sessionToken, {
+        name: "Synthetic Partner",
+        industry: "EDUCATION",
+        sourceDescription: "Directory",
+        sourceTier: "research",
+      });
+      expect(result.ok).toBe(true);
+      expect((await db.query("SELECT * FROM partners")).rows).toHaveLength(1);
+    } finally {
+      await db.close();
+    }
+  });
+  it("fails closed without a configured PostgreSQL connection", async () => {
+    const original = process.env.DATABASE_URL;
+    delete process.env.DATABASE_URL;
+    try {
+      await expect(
+        withPartnerBackend(async ({ partners }) =>
+          partners.search(null, { q: "", industry: null }),
+        ),
+      ).rejects.toThrow(PartnerBackendUnavailableError);
+    } finally {
+      if (original === undefined) delete process.env.DATABASE_URL;
+      else process.env.DATABASE_URL = original;
+    }
+  });
+  it("rejects an unknown DATABASE_SSL mode instead of silently ignoring it", async () => {
+    const keys = [
+      "DATABASE_URL",
+      "GOOGLE_OAUTH_CLIENT_ID",
+      "CRM_ALLOWED_EMAILS",
+      "DATABASE_SSL",
+    ] as const;
+    const saved = keys.map((key) => [key, process.env[key]] as const);
+    process.env.DATABASE_URL = "postgres://user:pass@127.0.0.1:1/crm";
+    process.env.GOOGLE_OAUTH_CLIENT_ID = "synthetic.apps.googleusercontent.com";
+    process.env.CRM_ALLOWED_EMAILS = "lead@example.invalid";
+    process.env.DATABASE_SSL = "sometimes";
+    try {
+      await expect(
+        withPartnerBackend(async ({ partners }) =>
+          partners.search(null, { q: "", industry: null }),
+        ),
+      ).rejects.toThrow(PartnerBackendUnavailableError);
+    } finally {
+      for (const [key, value] of saved) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+    }
   });
 
   it("keeps synthetic fixtures available to explicit tests only", () => {
     expect(new MockPartnerService().all()).toHaveLength(2);
-    expect(() => getPartnerService()).toThrow(PartnerBackendUnavailableError);
   });
 
   it("never returns fixture records from the production list endpoint", async () => {
@@ -35,7 +117,11 @@ describe("production partner boundary", () => {
     const response = await createPartner(
       new Request("http://localhost/api/partners", {
         method: "POST",
-        headers: { "content-type": "application/json", "x-dev-principal-role": "CRM_LEAD" },
+        headers: {
+          "content-type": "application/json",
+          origin: "http://localhost",
+          "x-dev-principal-role": "CRM_LEAD",
+        },
         body: JSON.stringify({ name: "Synthetic Example" }),
       }),
     );
@@ -50,7 +136,7 @@ describe("production partner boundary", () => {
     const response = await editPartner(
       new Request("http://localhost/api/partners/1", {
         method: "PATCH",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", origin: "http://localhost" },
         body: JSON.stringify({
           kind: "dnc",
           contactId: "synthetic",

@@ -41,7 +41,7 @@ function validCreateInput() {
     officialEmail: "info@cahaya-synthetic.example",
     sourceUrl: "https://directory.example.invalid/cahaya",
     sourceTier: "official",
-    lawfulBasisNote: "published business directory entry",
+    sourceDescription: "published business directory entry",
     contact: {
       name: "Sari synthetic",
       email: "sari@cahaya-synthetic.example",
@@ -141,14 +141,16 @@ describe("create validation", () => {
       ...validCreateInput(),
       industry: "B2B_VERTICAL",
       officialEmail: "not-an-email",
-      lawfulBasisNote: "x",
+      sourceDescription: "x",
+      contact: { ...validCreateInput().contact, lawfulBasisNote: "x" },
     });
     expect(result).toMatchObject({ ok: false, error: "validation_failed" });
     if (!result.ok && result.error === "validation_failed") {
       const paths = result.issues.map((i) => i.path);
       expect(paths).toContain("industry");
       expect(paths).toContain("officialEmail");
-      expect(paths).toContain("lawfulBasisNote");
+      expect(paths).toContain("sourceDescription");
+      expect(paths).toContain("contact.lawfulBasisNote");
     }
   });
 

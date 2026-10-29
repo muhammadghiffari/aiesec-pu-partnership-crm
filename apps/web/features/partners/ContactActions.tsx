@@ -5,6 +5,7 @@
  * Business rules run server-side (PATCH /api/partners/[id]); this component
  * surfaces the result accessibly, including denials and validation errors.
  */
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { VERIFICATION_STATUSES, type VerificationStatus } from "./types";
 
@@ -28,32 +29,42 @@ export function ContactActions({
   const [message, setMessage] = useState<string | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
   const [busy, setBusy] = useState(false);
+  const router = useRouter();
 
   async function patch(body: Record<string, unknown>, onSuccess: () => void, successText: string) {
     setBusy(true);
     setIssues([]);
     setMessage(null);
-    const response = await fetch(`/api/partners/${partnerId}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    setBusy(false);
-    if (response.ok) {
-      onSuccess();
-      setMessage(successText);
-      return;
+    try {
+      const response = await fetch(`/api/partners/${partnerId}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (response.ok) {
+        onSuccess();
+        setMessage(successText);
+        return;
+      }
+      if (response.status === 422) {
+        const data = (await response.json()) as { issues?: Issue[] };
+        setIssues(data.issues ?? []);
+        return;
+      }
+      if (response.status === 401) {
+        setMessage("Your session has expired. Sign in again and retry.");
+        return;
+      }
+      if (response.status === 403) {
+        setMessage("You do not have permission for this action.");
+        return;
+      }
+      setMessage("The action failed. Try again.");
+    } catch {
+      setMessage("The action failed. Check your connection and try again.");
+    } finally {
+      setBusy(false);
     }
-    if (response.status === 422) {
-      const data = (await response.json()) as { issues: Issue[] };
-      setIssues(data.issues);
-      return;
-    }
-    if (response.status === 403) {
-      setMessage("You do not have permission for this action.");
-      return;
-    }
-    setMessage("The action failed. Try again.");
   }
 
   return (
@@ -77,7 +88,10 @@ export function ContactActions({
               sourceUrl: form.get("sourceUrl") || undefined,
               lawfulBasisNote: form.get("lawfulBasisNote") || undefined,
             },
-            () => setVerification(form.get("verification") as VerificationStatus),
+            () => {
+              setVerification(form.get("verification") as VerificationStatus);
+              router.refresh();
+            },
             "Contact verification updated.",
           );
         }}
@@ -115,7 +129,10 @@ export function ContactActions({
           const next = form.get("doNotContact") === "true";
           void patch(
             { kind: "dnc", contactId, doNotContact: next, reason: String(form.get("reason")) },
-            () => setDnc(next),
+            () => {
+              setDnc(next);
+              router.refresh();
+            },
             next ? "Contact marked do-not-contact." : "Do-not-contact cleared.",
           );
         }}

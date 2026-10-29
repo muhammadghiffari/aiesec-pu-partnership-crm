@@ -48,8 +48,8 @@ const ALLOWED_RUNTIME_DEPS = new Set(["next", "react", "react-dom"]);
 const APPROVED_PACKAGE_RUNTIME_DEPS: Record<string, readonly string[]> = {
   // M0-05: AGENTS.md mandates Zod at every boundary (identity token claims, allowlist entries).
   "@crm/core": ["zod"],
-  // M1-03: validate partner inputs at the server boundary.
-  "@crm/web": ["zod"],
+  // M1-03: domain/SQL service imports and PostgreSQL driver for authenticated API requests.
+  "@crm/web": ["zod", "@crm/core", "@crm/db", "pg"],
 };
 const ALLOWED_DEV_DEPS = new Set([
   "typescript",
@@ -58,6 +58,7 @@ const ALLOWED_DEV_DEPS = new Set([
   "@types/node",
   "@types/react",
   "@types/react-dom",
+  "@types/pg",
   "@crm/ai",
   "@crm/config",
   "@crm/core",

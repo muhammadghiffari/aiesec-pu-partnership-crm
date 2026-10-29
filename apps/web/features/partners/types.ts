@@ -3,25 +3,17 @@
  *
  * The fixed diagram (Partner, Contact, IndustryCategory) and PRD FR-200 define
  * the domain shape. M1-01 provides tables, not a persisted partner service;
- * this draft differs from migration 0001 (see DECISIONS Q-20). Until reconciled,
- * production access fails closed in backend.ts; tests alone use mock-service.ts.
+ * this draft differs from migration 0001 (see DECISIONS D-015). The production
+ * service is in @crm/core; tests alone use mock-service.ts.
  * This file must stay JSX-free so the root vitest suite can test it.
  */
+
+import { ESSM_INDUSTRIES } from "@crm/core";
 import { z } from "zod";
 
+export { ESSM_INDUSTRIES } from "@crm/core";
+
 /** Ten official ESSM BD industry categories (docs/ESSM_MAPPING.md §2). */
-export const ESSM_INDUSTRIES = [
-  { code: "ENERGY_MATERIALS_INDUSTRIALS", label: "Energy, Materials & Industrials" },
-  { code: "HEALTH_CARE", label: "Health Care" },
-  { code: "FINANCIAL_BANK_INSURANCE", label: "Financial (Bank & Insurance)" },
-  { code: "TECH_COMPANY", label: "Tech Company" },
-  { code: "FMCG_FNB", label: "FMCG & FnB" },
-  { code: "COMMUNICATION_SERVICES", label: "Communication Services" },
-  { code: "ECOMMERCE_RETAIL", label: "E-Commerce and Retail" },
-  { code: "EDUCATION", label: "Education" },
-  { code: "CONSULTING", label: "Consulting" },
-  { code: "OTHERS", label: "Others" },
-] as const;
 
 export type IndustryCode = (typeof ESSM_INDUSTRIES)[number]["code"];
 
@@ -58,7 +50,8 @@ export type Partner = {
   officialEmail: string | null;
   sourceUrl: string | null;
   sourceTier: SourceTier;
-  lawfulBasisNote: string;
+  /** D-015: required source description maps to `partners.source`. */
+  sourceDescription: string;
   createdAt: string;
   contacts: Contact[];
 };
@@ -66,7 +59,7 @@ export type Partner = {
 export type DuplicateWarning = {
   partnerId: string;
   name: string;
-  reason: "same_domain" | "similar_name";
+  reason: "same_domain" | "same_name" | "similar_name";
 };
 
 export type PartnerPrincipal = {
@@ -109,7 +102,7 @@ export const partnerCreateInputSchema = z.object({
   officialEmail: z.string().trim().toLowerCase().email().optional(),
   sourceUrl: z.string().trim().url().optional(),
   sourceTier: z.enum(SOURCE_TIERS),
-  lawfulBasisNote: z.string().trim().min(3).max(500),
+  sourceDescription: z.string().trim().min(3).max(500),
   contact: z.object({
     name: z.string().trim().min(2).max(200),
     title: z.string().trim().max(120).optional(),
@@ -130,11 +123,20 @@ export type PartnerCreateInput = z.infer<typeof partnerCreateInputSchema>;
 
 export const partnerUpdateInputSchema = z.object({
   name: z.string().trim().min(2).max(200).optional(),
-  websiteDomain: z.string().trim().toLowerCase().optional(),
+  websiteDomain: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9.-]+\.[a-z]{2,}$/)
+    .nullable()
+    .optional(),
   industry: z
     .enum(ESSM_INDUSTRIES.map((i) => i.code) as [IndustryCode, ...IndustryCode[]])
     .optional(),
-  officialEmail: z.string().trim().toLowerCase().email().optional(),
+  officialEmail: z.string().trim().toLowerCase().email().nullable().optional(),
+  sourceDescription: z.string().trim().min(3).max(500).optional(),
+  sourceUrl: z.string().trim().url().nullable().optional(),
+  sourceTier: z.enum(SOURCE_TIERS).optional(),
 });
 export type PartnerUpdateInput = z.infer<typeof partnerUpdateInputSchema>;
 
@@ -153,7 +155,7 @@ export const dncInputSchema = z.object({
 });
 
 /**
- * Draft UI service contract; not yet reconciled with the persisted schema.
+ * Test-only draft UI service contract; production uses the persisted service in @crm/core.
  */
 export interface PartnerService {
   search(

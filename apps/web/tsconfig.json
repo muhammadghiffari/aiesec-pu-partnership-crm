@@ -20,6 +20,7 @@
     ],
     "paths": {
       "@crm/core": ["../../packages/core/src/index.ts"],
+      "@crm/db": ["../../packages/db/src/index.ts"],
       "@/*": ["./*"]
     }
   },

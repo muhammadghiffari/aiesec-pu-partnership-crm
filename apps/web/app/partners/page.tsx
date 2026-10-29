@@ -1,20 +1,14 @@
 /**
- * /partners — draft searchable partner list; production is unavailable until
- * the audited service and authenticated session integration are installed.
+ * /partners — authenticated searchable Partner master. The persisted service
+ * enforces authorization before records are read.
  */
 
+import { authorize, ESSM_INDUSTRIES, type PartnerRecord } from "@crm/core";
 import type { Metadata } from "next";
-import {
-  getPartnerPrincipal,
-  getPartnerService,
-  PartnerBackendUnavailableError,
-} from "@/features/partners/backend";
+import { cookies } from "next/headers";
+import { PartnerBackendUnavailableError, withPartnerBackend } from "@/features/partners/backend";
 import { PartnerSearchList } from "@/features/partners/PartnerSearchList";
-import {
-  type IndustryCode,
-  type Partner,
-  PartnerAccessDeniedError,
-} from "@/features/partners/types";
+import { SignOutButton } from "@/features/partners/SignOutButton";
 
 export const metadata: Metadata = { title: "Partners — CRM" };
 
@@ -24,18 +18,25 @@ export default async function PartnersPage({
   searchParams: Promise<{ q?: string; industry?: string }>;
 }) {
   const { q = "", industry = "" } = await searchParams;
-  const industryCode = industry === "" ? null : (industry as IndustryCode);
-  let partners: Partner[] = [];
+  const industryCode = ESSM_INDUSTRIES.find((item) => item.code === industry)?.code ?? null;
+  let partners: PartnerRecord[] = [];
+  let canWrite = false;
   let denied = false;
   let errored = false;
   let unavailable = false;
   try {
-    partners = await getPartnerService().search(getPartnerPrincipal(), q, industryCode);
+    const token = (await cookies()).get("crm_session")?.value;
+    const result = await withPartnerBackend(({ partners: service }) =>
+      service.search(token, { q, industry: industryCode }),
+    );
+    if (result.ok) {
+      partners = result.value;
+      canWrite = authorize(result.principal, "partner.write").ok;
+    } else if (result.httpStatus === 401 || result.httpStatus === 403) denied = true;
+    else errored = true;
   } catch (error) {
     if (error instanceof PartnerBackendUnavailableError) {
       unavailable = true;
-    } else if (error instanceof PartnerAccessDeniedError) {
-      denied = true;
     } else {
       errored = true;
     }
@@ -76,7 +77,13 @@ export default async function PartnersPage({
   return (
     <main>
       <h1>Partner master</h1>
-      <PartnerSearchList partners={partners} query={q} industry={industryCode} />
+      <SignOutButton />
+      <PartnerSearchList
+        partners={partners}
+        query={q}
+        industry={industryCode}
+        canWrite={canWrite}
+      />
     </main>
   );
 }

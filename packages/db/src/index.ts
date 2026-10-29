@@ -8,5 +8,8 @@
 
 export const DB_PACKAGE_NAME = "@crm/db" as const;
 
+export * from "./audit-store";
 export * from "./migrate";
 export * from "./migrations/index";
+export * from "./partners";
+export * from "./sessions";

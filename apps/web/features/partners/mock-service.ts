@@ -121,7 +121,7 @@ export class MockPartnerService implements PartnerService {
       officialEmail: data.officialEmail ?? null,
       sourceUrl: data.sourceUrl ?? null,
       sourceTier: data.sourceTier,
-      lawfulBasisNote: data.lawfulBasisNote,
+      sourceDescription: data.sourceDescription,
       createdAt: now,
       contacts: [primaryContact],
     };
@@ -231,7 +231,7 @@ export function syntheticPartners(): Partner[] {
       officialEmail: "info@acme-synthetic.example",
       sourceUrl: "https://directory.example.invalid/acme",
       sourceTier: "official",
-      lawfulBasisNote: "published business directory entry",
+      sourceDescription: "published business directory entry",
       createdAt: "2026-10-01T02:00:00.000Z",
       contacts: [
         contact({
@@ -256,7 +256,7 @@ export function syntheticPartners(): Partner[] {
       officialEmail: "office@bumi-synthetic.example",
       sourceUrl: "https://directory.example.invalid/bumi",
       sourceTier: "research",
-      lawfulBasisNote: "public school partner list",
+      sourceDescription: "public school partner list",
       createdAt: "2026-10-05T02:00:00.000Z",
       contacts: [
         contact({

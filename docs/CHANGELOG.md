@@ -54,3 +54,10 @@
 - Test helper change: `audit/test-support.ts` can now roll back an additional store (`extraDomain`).
 - Interim decisions Q-17..Q-19 recorded in `docs/DECISIONS.md`.
 
+### M1-03 continuation — persisted Partner/Contact integration (FR-200)
+
+- Added bound-parameter Partner/Contact and session/user repositories, plus append-only SQL audit writer and same-connection transaction adapter, without a migration.
+- The domain service uses M0-05 authentication/RBAC and M0-06 audited mutations for list/detail, create/edit, contacts, human-reviewed partner duplicates, provenance, verification and DNC; contact details and email-search are hidden from viewers.
+- Added a PostgreSQL-backed web composition root, Host/forwarded-header-aware same-origin checks on mutations, Google ID-token sign-in with HttpOnly session cookie, sign-out UI, and partner/contact UI wiring. The synthetic mock remains test-only; missing configuration remains fail-closed. `DATABASE_SSL` is validated (`disable`, `require`, `verify-full`); an unknown value fails closed, and production otherwise requires verified TLS.
+- Fixed the contact form's wrapping labels (explicit `htmlFor`/`id` now give each select a clean accessible name), made the partner list aggregate multiple contacts instead of reporting the alphabetically first one, refreshed server-rendered verification/DNC state immediately, and allowed a phone-only primary contact while still requiring at least one channel.
+- D-015 records Ghiffari's `sourceDescription` → `partners.source` decision. Q-21 remains open. A production-build browser walkthrough against isolated synthetic PostgreSQL passed for create/contact/verify/DNC/edit/search/denial/404/sign-out, with real HTTP checks for duplicate, validation, CSRF, expired/revoked/signed-out sessions and sign-out cookies. Google ID-token exchange itself remains unexercised without an authorized OAuth test account; see `docs/HANDOVER.md`.
