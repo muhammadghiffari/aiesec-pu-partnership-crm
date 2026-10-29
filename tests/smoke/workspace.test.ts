@@ -43,10 +43,14 @@ function workspaceManifests(): { dir: string; manifest: PackageManifest }[] {
 // Agreed minimal M0-02 dependency set. Anything else must arrive through a later
 // issue with its own justification (AGENTS.md: no new dependencies without need).
 const ALLOWED_RUNTIME_DEPS = new Set(["next", "react", "react-dom"]);
-// M1-03 justification: zod validates partner API request bodies at the
-// server-side route boundary (AGENTS.md mandates Zod at all boundaries).
-// Scoped to @crm/web; any other package adding zod still fails this guard.
-const PACKAGE_EXTRA_RUNTIME_DEPS = new Map([["@crm/web", new Set(["zod"])]]);
+// Per-package runtime dependencies approved by later issues. Each entry needs a justification and
+// is scoped to the single package that needs it (no global widening).
+const APPROVED_PACKAGE_RUNTIME_DEPS: Record<string, readonly string[]> = {
+  // M0-05: AGENTS.md mandates Zod at every boundary (identity token claims, allowlist entries).
+  "@crm/core": ["zod"],
+  // M1-03: validate partner inputs at the server boundary.
+  "@crm/web": ["zod"],
+};
 const ALLOWED_DEV_DEPS = new Set([
   "typescript",
   "vitest",
@@ -60,6 +64,8 @@ const ALLOWED_DEV_DEPS = new Set([
   "@crm/db",
   "@crm/docs",
   "@crm/worker",
+  // M1-01: in-process PostgreSQL for migration/constraint tests in @crm/db (dev only).
+  "@electric-sql/pglite",
 ]);
 
 describe("M0-02 workspace scaffold", () => {
@@ -95,11 +101,14 @@ describe("M0-02 workspace scaffold", () => {
   it("adds no dependencies beyond the agreed minimal scaffold set", () => {
     for (const { manifest } of workspaceManifests()) {
       for (const [dep] of Object.entries(manifest.dependencies ?? {})) {
-        const extra = PACKAGE_EXTRA_RUNTIME_DEPS.get(manifest.name);
+        const allowed = new Set([
+          ...ALLOWED_RUNTIME_DEPS,
+          ...(APPROVED_PACKAGE_RUNTIME_DEPS[manifest.name] ?? []),
+        ]);
         expect(
-          ALLOWED_RUNTIME_DEPS.has(dep) || (extra?.has(dep) ?? false),
-          `${manifest.name} runtime dep ${dep} is not in the M0-02 set`,
-        ).toBe(true);
+          allowed,
+          `${manifest.name} runtime dep ${dep} is not an approved dependency`,
+        ).toContain(dep);
       }
       for (const [dep] of Object.entries(manifest.devDependencies ?? {})) {
         expect(

@@ -85,6 +85,10 @@ importers:
         version: 7.0.2
 
   packages/core:
+    dependencies:
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
     devDependencies:
       typescript:
         specifier: 7.0.2
@@ -92,6 +96,9 @@ importers:
 
   packages/db:
     devDependencies:
+      "@electric-sql/pglite":
+        specifier: ^0.5.13
+        version: 0.5.13
       typescript:
         specifier: 7.0.2
         version: 7.0.2
@@ -200,6 +207,12 @@ packages:
     engines: { node: ">=14.21.3" }
     cpu: [x64]
     os: [win32]
+
+  "@electric-sql/pglite@0.5.13":
+    resolution:
+      {
+        integrity: sha512-4rZuxK1k07w6sSpJzjMri0B9+HuXuC7V9pxVB51pR0T9KPqXg6TD0mdaEwBA9rkcL4jdht4tGDf/wYzAiGhT7g==,
+      }
 
   "@emnapi/runtime@1.11.3":
     resolution:
@@ -1452,6 +1465,8 @@ snapshots:
 
   "@biomejs/cli-win32-x64@2.6.3":
     optional: true
+
+  "@electric-sql/pglite@0.5.13": {}
 
   "@emnapi/runtime@1.11.3":
     dependencies:
