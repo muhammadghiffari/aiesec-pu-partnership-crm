@@ -19,6 +19,7 @@ There is deliberately no ORM and no second schema definition. The runner takes a
 | 4 | `audit_log` | append-only `audit_log` with UPDATE/DELETE/TRUNCATE guard triggers |
 | 5 | `user_sessions` | session store for M0-05 (token hash only) |
 | 6 | `research_jobs` | M2-01: immutable criteria snapshots (trigger), research job queue with lease/idempotency/attempt bounds, per-user quotas, prospect candidate drafts |
+| 7 | `contact_verification` | M2-02: `contact_channels` (canonical, immutable address with its own source and verification) and `contact_candidates` (provenance-required, human-reviewed) |
 
 ## Rules
 
