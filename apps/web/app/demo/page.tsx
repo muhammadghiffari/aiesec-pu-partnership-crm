@@ -5,7 +5,7 @@ import { LpReveal } from "./LpReveal";
 export const metadata: Metadata = {
   title: "AIESEC in PU Partnership CRM — Stakeholder Preview",
   description:
-    "Explore how AIESEC in Padjadjaran University manages its end-to-end partnership lifecycle — from prospect research through LoA signing and post-survey. Synthetic demo data only.",
+    "Explore how AIESEC in President University manages its end-to-end partnership lifecycle — from prospect research through LoA signing and post-survey. Synthetic demo data only.",
   robots: { index: false, follow: false },
 };
 
@@ -230,7 +230,7 @@ export default function DemoLandingPage() {
           </h1>
 
           <p className="lp-lead">
-            AIESEC in Padjadjaran University's Partnership CRM tracks every deal from prospect
+            AIESEC in President University's Partnership CRM tracks every deal from prospect
             research through LoA signing to post-survey — with built-in business-rule safeguards and
             an ESSM-aligned data model.
           </p>
@@ -498,7 +498,7 @@ export default function DemoLandingPage() {
         <footer className="lp-foot">
           <div className="lp-wrap" style={{ padding: 0 }}>
             <div>
-              <strong>AIESEC in Padjadjaran University</strong>
+              <strong>AIESEC in President University</strong>
               <br />
               Partnership CRM — Presentation prototype
             </div>

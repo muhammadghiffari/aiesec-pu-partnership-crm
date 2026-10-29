@@ -121,7 +121,7 @@
   border-radius: 20px;
   letter-spacing: 0.04em;
 }
-.lp-h1 {
+.lp .lp-h1 {
   margin: 22px auto 0;
   max-width: 15ch;
   font-size: clamp(38px, 6.4vw, 70px);
@@ -136,7 +136,7 @@
   background-clip: text;
   color: transparent;
 }
-.lp-lead {
+.lp .lp-lead {
   margin: 22px auto 0;
   max-width: 62ch;
   font-size: clamp(15px, 1.6vw, 17.5px);
