@@ -18,6 +18,7 @@ There is deliberately no ORM and no second schema definition. The runner takes a
 | 3 | `implementation_revenue_merch` | realization projects, deliveries, revenue records, engagements, surveys, merchandise (items, bundles, bundle items, realizations), rate card assessments |
 | 4 | `audit_log` | append-only `audit_log` with UPDATE/DELETE/TRUNCATE guard triggers |
 | 5 | `user_sessions` | session store for M0-05 (token hash only) |
+| 6 | `research_jobs` | M2-01: immutable criteria snapshots (trigger), research job queue with lease/idempotency/attempt bounds, per-user quotas, prospect candidate drafts |
 
 ## Rules
 
