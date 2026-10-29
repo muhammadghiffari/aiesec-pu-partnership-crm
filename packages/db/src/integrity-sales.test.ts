@@ -22,8 +22,6 @@ beforeAll(async () => {
   f = await buildFixture();
 });
 
-const HASH = "a".repeat(64);
-
 describe("users", () => {
   it("normalizes: rejects non-lowercase and malformed emails, and duplicates", async () => {
     await expectDbError(
@@ -373,21 +371,63 @@ describe("market research and prospecting", () => {
 });
 
 describe("outreach: approval hash invalidation, DNC and verified-recipient gates", () => {
+  // Since migration 0008 a message is bound to an exact contact_channels row and an approval
+  // must carry the hash recomputed from message + channel address.
+  const channels = new Map<unknown, Row>();
+  async function emailChannel(contact: Row, verifiedChannel = true): Promise<Row> {
+    const key = `${String(contact.contact_id)}:${verifiedChannel}`;
+    const cached = channels.get(key);
+    if (cached) return cached;
+    const created = await insert(f.db, "contact_channels", {
+      channel_id: crypto.randomUUID(),
+      contact_id: contact.contact_id,
+      channel: "EMAIL",
+      address: `${crypto.randomUUID().slice(0, 8)}@syntheticedu.example.invalid`,
+      source_tier: "OFFICIAL",
+      created_at: "2026-10-29T03:00:00Z",
+      ...(verifiedChannel
+        ? {
+            verification_status: "VERIFIED",
+            verification_method: "PARTNER_CONFIRMED",
+            verified_by: f.staff.user_id,
+            verified_at: "2026-10-29T03:00:00Z",
+          }
+        : {}),
+    });
+    channels.set(key, created);
+    return created;
+  }
+
   async function draft(extra: Row = {}, contact: Row = f.contact, cycle: Row = f.cycle) {
+    const channel = await emailChannel(contact);
     return insert(f.db, "outreach_messages", {
       cycle_id: cycle.cycle_id,
       contact_id: contact.contact_id,
+      channel_id: channel.channel_id,
       draft_content: "Selamat siang, kami dari AIESEC in PU.",
+      subject: "Penjajakan kerja sama",
       channel: "EMAIL",
       ...extra,
     });
   }
-  const approve = (m: Row, by = f.staff) =>
+
+  /** The hash exactly as the application computes it, evaluated by the database function. */
+  async function hashOf(m: Row): Promise<string> {
+    const { rows } = await f.db.query<{ h: string }>(
+      `SELECT crm_outreach_approval_hash(m.message_id, m.cycle_id, m.contact_id, m.channel_id, m.channel, ch.address, m.subject, m.draft_content) AS h
+         FROM outreach_messages m JOIN contact_channels ch ON ch.channel_id = m.channel_id WHERE m.message_id = $1`,
+      [m.message_id],
+    );
+    return (rows[0] as { h: string }).h;
+  }
+
+  const approve = async (m: Row, by = f.staff) =>
     update(f.db, "outreach_messages", "message_id", m.message_id, {
       status: "APPROVED",
       approved_by: by.user_id,
       approved_at: "2026-10-29T03:00:00Z",
-      approved_content_hash: HASH,
+      approved_content_hash: await hashOf(m),
+      approved_lint_version: 1,
     });
 
   it("one contact and one cycle can have many messages; follow-up attempts are capped at 3", async () => {
@@ -401,7 +441,8 @@ describe("outreach: approval hash invalidation, DNC and verified-recipient gates
     const m = await draft();
     await expectDbError(
       update(f.db, "outreach_messages", "message_id", m.message_id, { status: "APPROVED" }),
-      "outreach_approval_complete",
+      // The 0008 guard trigger fires before the CHECK; either layer must refuse.
+      /outreach_approval_complete|approver must be an active/,
     );
     await expectDbError(
       update(f.db, "outreach_messages", "message_id", m.message_id, {
@@ -409,7 +450,7 @@ describe("outreach: approval hash invalidation, DNC and verified-recipient gates
         approved_by: f.staff.user_id,
         approved_at: "2026-10-29T03:00:00Z",
       }),
-      "outreach_approval_all_or_none",
+      /outreach_approval_all_or_none|hash does not match/,
     );
     expect((await approve(m)).status).toBe("APPROVED");
   });
@@ -422,8 +463,9 @@ describe("outreach: approval hash invalidation, DNC and verified-recipient gates
         approved_by: f.staff.user_id,
         approved_at: "2026-10-29T03:00:00Z",
         approved_content_hash: "not-a-hash",
+        approved_lint_version: 1,
       }),
-      "approved_content_hash",
+      /approved_content_hash|hash does not match/,
     );
     await expectDbError(
       update(f.db, "outreach_messages", "message_id", m.message_id, {
@@ -483,7 +525,7 @@ describe("outreach: approval hash invalidation, DNC and verified-recipient gates
       follow_up_attempt: 1,
     });
     expect(kept.status).toBe("APPROVED");
-    expect(kept.approved_content_hash).toBe(HASH);
+    expect(kept.approved_content_hash).toBe(await hashOf(m));
   });
 
   it("sent messages are immutable (content, channel, recipient, hash)", async () => {
