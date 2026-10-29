@@ -22,6 +22,7 @@ There is deliberately no ORM and no second schema definition. The runner takes a
 | 7 | `contact_verification` | M2-02: `contact_channels` (canonical, immutable address with its own source and verification) and `contact_candidates` (provenance-required, human-reviewed) |
 | 8 | `outreach_approval` | M2-04: outreach messages bound to an exact `contact_channels` row, subject/language/AI provenance, DB recomputation of the approval hash, stricter guard trigger |
 | 9 | `rate_card_versions` | M3-01: version lifecycle trigger (DRAFT -> ACTIVE -> RETIRED, consecutive versions, no overlapping windows), items/packages/benefits editable only in a DRAFT, PROPOSED/CONFIRMED value status, derived assessment values forced NULL (Q-01) |
+| 10 | `pricing_snapshots` | M3-02: proposal lines proven equal to a frozen catalog version, single rounding rule as a CHECK, no package/custom double counting, one catalog version and currency per proposal, total check and immutability once a proposal leaves DRAFT |
 
 ## Rules
 
@@ -71,4 +72,11 @@ The domain services in `@crm/core` remain the primary enforcement and own user-f
 - **Backfill:** existing items become `value_status = 'PROPOSED'` (never silently confirmed). Because the migration is for an empty initial schema, no production backfill is needed.
 - **Rollback:** drops the triggers, functions, index, constraints and columns added here; tested by up/down/up.
 - **Q-01:** `rate_card_assessments.monetize_quality/monetize_value` are constrained to NULL. A later migration removes `rate_card_assessments_formula_unconfirmed` once the formula is confirmed against the live workbook and approved.
+
+
+## Migration 0010 notes (M3-02)
+
+- **Behaviour change:** proposals are created as DRAFT; lines may only reference ACTIVE/RETIRED catalog versions and must equal the catalog (name, unit, version, optional catalog value); the stored line total must follow the rounding rule; leaving DRAFT needs at least one line and a total equal to package price + custom lines; a sent proposal and its lines are immutable. M1-01's proposal tests were adapted (packages come from activated catalogs; zero-quantity rows carry a consistent total).
+- **Rounding parity:** the CHECK `line_total_value = ((quantity*1000)::bigint * agreed_unit_value + 500) / 1000` is identical to `lineTotal()` in `packages/core/src/pricing/calc.ts`; `integrity-pricing.test.ts` sweeps both and compares.
+- **Backfill:** `source` defaults to `CUSTOM` and the catalog snapshot to NULL for rows predating this migration (none in the initial schema). Rollback drops the triggers, functions, constraint and columns.
 

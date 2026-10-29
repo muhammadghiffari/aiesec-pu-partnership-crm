@@ -763,12 +763,15 @@ describe("rate card, packages and proposals", () => {
   });
 
   it("pricing mode and package reference are consistent", async () => {
+    // Proposals may only use packages of a frozen (ACTIVE/RETIRED) version, so activate first.
     const card = await sandbox();
+    await sandboxItem(card);
     const pkg = await insert(f.db, "rate_card_packages", {
       rate_card_id: card.rate_card_id,
       package_name: uniq("Brand"),
       listed_price: 1500000,
     });
+    await update(f.db, "rate_cards", "rate_card_id", card.rate_card_id, { status: "ACTIVE" });
     const base = { cycle_id: f.cycle.cycle_id, calculated_value: 1500000 };
     await insert(f.db, "proposals", {
       ...base,
@@ -802,8 +805,18 @@ describe("rate card, packages and proposals", () => {
         calculated_value: 1,
         status: "SENT",
       }),
-      "proposals_sent_has_timestamp",
+      /proposals_sent_has_timestamp|created as DRAFT/,
     );
+    await insert(f.db, "proposals", {
+      cycle_id: f.cycle.cycle_id,
+      pricing_mode: "CUSTOM",
+      calculated_value: 1,
+    });
+    await insert(f.db, "proposals", {
+      cycle_id: f.cycle.cycle_id,
+      pricing_mode: "CUSTOM",
+      calculated_value: 2,
+    });
     const { rows } = await f.db.query("SELECT 1 FROM proposals WHERE cycle_id = $1", [
       f.cycle.cycle_id,
     ]);
@@ -834,7 +847,12 @@ describe("rate card, packages and proposals", () => {
       calculated_value: 1,
     });
     await expectDbError(
-      insert(f.db, "proposal_benefits", { ...line, proposal_id: p2.proposal_id, quantity: 0 }),
+      insert(f.db, "proposal_benefits", {
+        ...line,
+        proposal_id: p2.proposal_id,
+        quantity: 0,
+        line_total_value: 0,
+      }),
       "quantity",
     );
     await expectDbError(

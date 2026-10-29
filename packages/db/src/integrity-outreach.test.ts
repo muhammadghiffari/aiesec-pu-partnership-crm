@@ -328,7 +328,7 @@ describe("rollback restores the previous guard", () => {
   it("down(8) removes the new columns and functions and re-installs the 0002 guard; up restores 0008", async () => {
     const db = new PGlite();
     await migrateUp(db, MIGRATIONS);
-    expect(await migrateDown(db, MIGRATIONS, 7)).toEqual([9, 8]);
+    expect(await migrateDown(db, MIGRATIONS, 7)).toEqual([10, 9, 8]);
 
     const cols = await db.query(
       "SELECT 1 FROM information_schema.columns WHERE table_name='outreach_messages' AND column_name IN ('channel_id','subject','language','approved_lint_version','draft_source','ai_template')",
