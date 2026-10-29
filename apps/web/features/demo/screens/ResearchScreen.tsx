@@ -11,6 +11,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ESSM_INDUSTRIES } from "../../partners/types";
 import { CandidateBadge, IndustryChip, industryLabel, JobBadge } from "../components/badges";
+import { useDemoRuntime } from "../live/provider";
 import { friendlyDate } from "../format";
 import { indexById } from "../selectors";
 import { useDemo } from "../store";
@@ -468,11 +469,13 @@ function ReviewModal({
   onClose: () => void;
 }) {
   const { state, dispatch } = useDemo();
+  const runtime = useDemoRuntime();
   const toast = useToast();
   const [resolution, setResolution] = useState<"NEW" | "LINK">("NEW");
   const [note, setNote] = useState("");
   const [rejectReason, setRejectReason] = useState("");
   const [confirm, setConfirm] = useState<null | "accept" | "reject">(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (candidate) {
@@ -489,22 +492,62 @@ function ReviewModal({
     : undefined;
   const job = state.jobs.find((j) => j.id === candidate.jobId);
 
-  function doAccept() {
-    if (!candidate) return;
-    dispatch({
-      type: "ACCEPT_CANDIDATE",
-      candidateId: candidate.id,
-      resolution,
-      note: note.trim(),
-    });
+  function candidatePartner() {
+    const contact = candidate!.contactDraft.email
+      ? {
+          name: candidate!.contactDraft.name,
+          title: candidate!.contactDraft.title,
+          email: candidate!.contactDraft.email,
+          phone: null as string | null,
+          sourceTier: candidate!.sourceTier,
+          sourceUrl: candidate!.sourceUrl,
+          lawfulBasisNote:
+            candidate!.contactDraft.offDomainNote ||
+            `Email sourced during research (${candidate!.sourceLabel}).`,
+        }
+      : null;
+    return {
+      name: candidate!.orgName,
+      websiteDomain: candidate!.websiteDomain,
+      industry: candidate!.industry,
+      officialEmail: candidate!.contactDraft.email || null,
+      sourceTier: candidate!.sourceTier,
+      sourceUrl: candidate!.sourceUrl,
+      lawfulBasisNote: note.trim() || `Acceptance review of research source: ${candidate!.sourceLabel}.`,
+      notes: "Accepted from the Prospecting review queue in this demo session.",
+      contact,
+    };
+  }
+
+  async function doAccept() {
+    if (!candidate || busy) return;
+    if (resolution === "LINK" && dupe) {
+      // Link decision: no record is created; the review state changes only.
+      dispatch({
+        type: "MARK_CANDIDATE_REVIEWED",
+        candidateId: candidate.id,
+        outcome: "ACCEPTED_LINKED",
+        note: note.trim() || `Reviewed as the same organization as ${dupe.name}.`,
+      });
+      setConfirm(null);
+      onClose();
+      toast.ok(
+        "Candidate linked",
+        "No duplicate was created; the decision was recorded.",
+      );
+      return;
+    }
+    setBusy(true);
+    const outcome = await runtime.acceptCandidate(candidate.id, candidatePartner());
+    setBusy(false);
+    if (!outcome) return; // the wrapper surfaced duplicates/server errors
     setConfirm(null);
     onClose();
-    toast.ok(
-      resolution === "NEW" ? "Candidate accepted" : "Candidate linked",
-      resolution === "NEW"
-        ? "A partner record was created in Prospecting with unverified contacts — verification comes next."
-        : "No duplicate was created; the decision was recorded.",
-    );
+    if (!("duplicates" in outcome))
+      toast.ok(
+        resolution === "NEW" ? "Candidate accepted" : "Candidate linked",
+        "A partner record was created in Prospecting with unverified contacts — verification comes next.",
+      );
   }
 
   function doReject() {

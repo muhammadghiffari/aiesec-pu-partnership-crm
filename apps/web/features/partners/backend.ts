@@ -1,10 +1,13 @@
-import type { IdentityVerifier } from "@crm/core";
 import {
   createAuditService,
-  createGoogleIdentityVerifier,
   createPartnerService,
   createSessionService,
   createStaticAllowlist,
+} from "@crm/core";
+import {
+  createDevIdentityVerifier,
+  createGoogleIdentityVerifier,
+  type IdentityVerifier,
 } from "@crm/core";
 import type { SqlClient } from "@crm/db";
 import {
@@ -21,6 +24,35 @@ export class PartnerBackendUnavailableError extends Error {
     super("Partner persistence and authenticated session wiring are not available");
     this.name = "PartnerBackendUnavailableError";
   }
+}
+
+/**
+ * Dev-only demo gate (D-016). The only thing it relaxes is the *identity verifier*:
+ * a `dev:<email>` token is accepted instead of a Google ID token when the process
+ * is not in production AND `CRM_DEMO_MODE=1` is set explicitly. Everything else —
+ * allowlist, active users row, session minting, RBAC, audit — is the real path.
+ * In production the flag is ignored entirely and Google verification is required.
+ */
+export function demoSignInEnabled(): boolean {
+  return process.env.NODE_ENV !== "production" && process.env.CRM_DEMO_MODE === "1";
+}
+
+function resolveIdentity(clientId: string): IdentityVerifier {
+  return demoSignInEnabled()
+    ? createDevIdentityVerifier()
+    : createGoogleIdentityVerifier({ clientId, jwks });
+}
+
+/** First allowlisted email, for the dev sign-in suggestion (dev mode only, never PII). */
+export function firstAllowlistedEmail(): string | null {
+  if (!demoSignInEnabled()) return null;
+  const value = process.env.CRM_ALLOWED_EMAILS;
+  if (!value) return null;
+  const first = value
+    .split(/[,;\n]/)
+    .map((entry) => entry.trim().toLowerCase())
+    .filter((entry) => /[^\s@]+@[^\s@]+\.[^\s@]{2,}/.test(entry))[0];
+  return first ?? null;
 }
 
 export function readSessionCookie(headers: Headers): string | null {
@@ -61,7 +93,12 @@ function configuration() {
   const url = process.env.DATABASE_URL;
   const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
   const allowlist = process.env.CRM_ALLOWED_EMAILS;
-  if (!url || !clientId || !allowlist) throw new PartnerBackendUnavailableError();
+  const demo = demoSignInEnabled();
+  // The allowlist is always required: even dev sign-in is gated by it and the
+  // session service re-checks it on every request.
+  if (!url || !allowlist) throw new PartnerBackendUnavailableError();
+  // The Google client id is only required outside the dev-only demo gate.
+  if (!demo && !clientId) throw new PartnerBackendUnavailableError();
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -70,7 +107,7 @@ function configuration() {
   }
   if (parsed.protocol !== "postgres:" && parsed.protocol !== "postgresql:")
     throw new PartnerBackendUnavailableError();
-  return { url, clientId, allowlist };
+  return { url, clientId: clientId ?? "", allowlist };
 }
 function sslConfiguration(url: string) {
   const explicit = process.env.DATABASE_SSL;
@@ -122,7 +159,7 @@ export async function withPartnerBackend<T>(
     };
     return await run(
       createPersistedBackend(db, {
-        identity: createGoogleIdentityVerifier({ clientId: config.clientId, jwks }),
+        identity: resolveIdentity(config.clientId),
         allowlist: config.allowlist,
       }),
     );

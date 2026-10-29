@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { industryLabel, VerificationBadge } from "../components/badges";
+import { useDemoRuntime } from "../live/provider";
 import { indexById } from "../selectors";
 import { useDemo } from "../store";
 import type { ChannelKind, VerificationStatus } from "../types";
@@ -30,7 +31,6 @@ import {
   KeyValue,
   PageHeader,
 } from "../ui/primitives";
-import { useToast } from "../ui/toast";
 
 const VER_METHODS = [
   "Reply confirmation during intro exchange",
@@ -523,12 +523,13 @@ function VerificationModal({
   mode: null | { kind: "identity" } | { kind: "channel"; channel: ChannelKind };
   onClose: () => void;
 }) {
-  const { dispatch } = useDemo();
-  const toast = useToast();
+  const { state } = useDemo();
+  const runtime = useDemoRuntime();
   const [status, setStatus] = useState<VerificationStatus>("verified");
   const [method, setMethod] = useState("");
   const [evidence, setEvidence] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (mode) {
@@ -547,7 +548,7 @@ function VerificationModal({
 
   function save() {
     setErr(null);
-    if (!mode) return;
+    if (!mode || busy) return;
     if (status === "verified") {
       if (!method.trim()) {
         setErr("An explicit verification method is required to mark verified.");
@@ -564,29 +565,26 @@ function VerificationModal({
       setErr("Record how the verification failed (e.g. bounced address).");
       return;
     }
-    if (mode.kind === "identity") {
-      dispatch({
-        type: "SET_IDENTITY_VERIFICATION",
-        contactId,
-        status,
-        method: method.trim() || null,
-        evidenceUrl: evidence.trim() || null,
-      });
-    } else {
-      dispatch({
-        type: "SET_CHANNEL_VERIFICATION",
-        contactId,
-        channel: mode.channel,
-        status,
-        method: method.trim() || null,
-        evidenceUrl: evidence.trim() || null,
-      });
+    const partnerId = state.contacts.find((c) => c.id === contactId)?.partnerId;
+    if (!partnerId) {
+      setErr("The contact is no longer in this session — reopen the Contacts screen.");
+      return;
     }
-    onClose();
-    toast.ok(
-      "Verification updated",
-      "This is a demo-state change only — outreach readiness recomputes from it.",
-    );
+    setBusy(true);
+    void runtime
+      .verifyContact({
+        partnerId,
+        contactId,
+        scope: mode.kind === "identity" ? "identity" : mode.channel,
+        status,
+        method: method.trim(),
+        evidenceUrl: evidence.trim() || null,
+      })
+      .then((ok) => {
+        setBusy(false);
+        if (ok) onClose();
+        // a failure keeps the modal open; the wrapper explained why
+      });
   }
 
   return (
@@ -598,8 +596,8 @@ function VerificationModal({
       footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          <Button variant="primary" icon="shield-check" onClick={save}>
-            Save verification
+          <Button variant="primary" icon="shield-check" onClick={save} disabled={busy}>
+            {busy ? "Saving…" : "Save verification"}
           </Button>
         </>
       }
@@ -627,7 +625,11 @@ function VerificationModal({
       <Field
         label={status === "verified" ? "Verification method (required)" : "Method / note"}
         htmlFor="vm-method"
-        hint="Pick a documented method or write one explicitly."
+        hint={
+          runtime.mode === "live"
+            ? "Recorded in the demo activity journal only - the database stores the verification status, not this wording."
+            : "Pick a documented method or write one explicitly."
+        }
       >
         <input
           id="vm-method"
@@ -647,7 +649,11 @@ function VerificationModal({
       <Field
         label={status === "verified" ? "Evidence URL (required)" : "Evidence URL"}
         htmlFor="vm-evidence"
-        hint="Synthetic link that supports the verification claim."
+        hint={
+          runtime.mode === "live"
+            ? "Stored on the contact record when verifying (M1-03 contract)."
+            : "Synthetic link that supports the verification claim."
+        }
       >
         <input
           id="vm-evidence"
@@ -672,11 +678,12 @@ function DncModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const { state, dispatch } = useDemo();
-  const toast = useToast();
+  const { state } = useDemo();
+  const runtime = useDemoRuntime();
   const contact = state.contacts.find((c) => c.id === contactId);
   const [reason, setReason] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -693,12 +700,15 @@ function DncModal({
       setErr("A reason is required (minimum 3 characters) — DNC decisions must be attributable.");
       return;
     }
-    dispatch({ type: "SET_DNC", contactId, active: activate, reason: reason.trim() });
-    onClose();
-    toast.ok(
-      activate ? "Contact marked Do-Not-Contact" : "Do-Not-Contact cleared",
-      activate ? "This contact is now blocked in every outreach flow." : reason,
-    );
+    if (busy) return;
+    setBusy(true);
+    void runtime
+      .setDnc(contact.partnerId, contactId, activate, reason.trim())
+      .then((ok) => {
+        setBusy(false);
+        if (ok) onClose();
+        // a failure keeps the modal open; the wrapper explained why
+      });
   }
 
   return (
@@ -715,11 +725,11 @@ function DncModal({
         <>
           <Button onClick={onClose}>Cancel</Button>
           {active ? (
-            <Button variant="primary" onClick={() => save(false)}>
+            <Button variant="primary" onClick={() => save(false)} disabled={busy}>
               Clear DNC with reason
             </Button>
           ) : (
-            <Button variant="danger" icon="ban" onClick={() => save(true)}>
+            <Button variant="danger" icon="ban" onClick={() => save(true)} disabled={busy}>
               Mark Do-Not-Contact
             </Button>
           )}
@@ -736,7 +746,11 @@ function DncModal({
       <Field
         label={active ? "Reason for clearing (required)" : "Reason (required)"}
         htmlFor="dnc-reason"
-        hint="e.g. Opted out via reply on 5 Oct 2026."
+        hint={
+          runtime.mode === "live"
+            ? "Reason is stored with the DNC record and the audit trail (min 3 characters)."
+            : "e.g. Opted out via reply on 5 Oct 2026."
+        }
       >
         <textarea
           id="dnc-reason"

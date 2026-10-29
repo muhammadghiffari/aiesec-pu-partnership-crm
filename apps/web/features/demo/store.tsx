@@ -32,13 +32,38 @@ import type {
 } from "./types";
 import { DEMO_NOW_ISO } from "./types";
 
+export type DemoDataMode = "connecting" | "sandbox" | "live";
+
+/** Signed-in principal reported by /api/demo/status (dev/demo mode only). */
+export interface DemoRuntimeUser {
+  email: string;
+  role: string;
+}
+
 export interface DemoState extends DemoDataset {
   prefs: DemoPrefs;
   seq: number;
+  /** Where the partner/contact directory is served from ("connecting" before first probe). */
+  mode: DemoDataMode;
+  liveUser: DemoRuntimeUser | null;
+  /** Dev-only local sign-in availability inside the demo gate (D-016). */
+  devSignIn: boolean;
+  devEmail: string | null;
+  /** True when the database is configured but a probe could not reach it. */
+  unreachable: boolean;
 }
 
 function initialState(): DemoState {
-  return { ...seedDataset(), prefs: { density: "comfortable", dateFormat: "relative" }, seq: 100 };
+  return {
+    ...seedDataset(),
+    prefs: { density: "comfortable", dateFormat: "relative" },
+    seq: 100,
+    mode: "connecting",
+    liveUser: null,
+    devSignIn: false,
+    devEmail: null,
+    unreachable: false,
+  };
 }
 
 interface LogInput {
@@ -57,7 +82,7 @@ function log(state: DemoState, entry: LogInput): DemoState {
       {
         id: sessionId("a", seq),
         at: new Date().toISOString(),
-        actor: "Nadia Prameswari",
+        actor: state.liveUser?.email ?? "Nadia Prameswari",
         kind: entry.kind,
         partnerId: entry.partnerId,
         summary: entry.summary,
@@ -84,6 +109,27 @@ function patchPartner(state: DemoState, partnerId: string, touchOnly = true): De
 export type DemoAction =
   | { type: "RESET" }
   | { type: "SET_PREF"; key: keyof DemoPrefs; value: DemoPrefs[keyof DemoPrefs] }
+  | {
+      type: "SET_RUNTIME";
+      mode: DemoDataMode;
+      liveUser: DemoRuntimeUser | null;
+      devSignIn: boolean;
+      devEmail: string | null;
+      unreachable: boolean;
+    }
+  | { type: "LOAD_LIVE_DIRECTORY"; partners: DemoPartner[]; contacts: DemoContact[] }
+  | { type: "UPSERT_LIVE_PARTNER"; partner: DemoPartner }
+  | { type: "UPSERT_LIVE_CONTACT"; contact: DemoContact }
+  | {
+      type: "JOURNAL";
+      entry: { kind: string; partnerId: string | null; summary: string; href: string };
+    }
+  | {
+      type: "MARK_CANDIDATE_REVIEWED";
+      candidateId: string;
+      outcome: "ACCEPTED" | "ACCEPTED_LINKED" | "REJECTED";
+      note: string;
+    }
   | { type: "MARK_NOTIFICATIONS_READ" }
   | { type: "ADD_PARTNER"; partner: NewPartnerPayload }
   | { type: "UPDATE_PARTNER"; id: string; patch: PartnerPatch }
@@ -226,6 +272,92 @@ function reducer(state: DemoState, action: DemoAction): DemoState {
       return { ...state, prefs: { ...state.prefs, [action.key]: action.value } };
     case "MARK_NOTIFICATIONS_READ":
       return { ...state, notifications: state.notifications.map((n) => ({ ...n, read: true })) };
+
+    case "SET_RUNTIME":
+      return {
+        ...state,
+        mode: action.mode,
+        liveUser: action.liveUser,
+        devSignIn: action.devSignIn,
+        devEmail: action.devEmail,
+        unreachable: action.unreachable,
+      };
+
+    /* Live-directory actions (D-016): the payload is already mapped to demo shapes
+     * by the runtime layer; the reducer only normalises state. Dependent demo slices
+     * are pruned to partner ids the database actually has, so references stay coherent. */
+    case "LOAD_LIVE_DIRECTORY": {
+      const partnerIds = new Set(action.partners.map((p) => p.id));
+      return {
+        ...state,
+        partners: action.partners,
+        contacts: action.contacts,
+        meetings: state.meetings.filter((m) => partnerIds.has(m.partnerId)),
+        agreements: state.agreements.filter((a) => partnerIds.has(a.partnerId)),
+        projects: state.projects.filter((p) => partnerIds.has(p.partnerId)),
+        drafts: state.drafts.filter((d) => partnerIds.has(d.partnerId)),
+        candidates: state.candidates.map((c) =>
+          c.duplicateOf && !partnerIds.has(c.duplicateOf) ? { ...c, duplicateOf: null } : c,
+        ),
+        tasks: state.tasks.filter((t) => !t.partnerId || partnerIds.has(t.partnerId)),
+      };
+    }
+
+    case "UPSERT_LIVE_PARTNER": {
+      const existing = state.partners.find((p) => p.id === action.partner.id);
+      // notes / ownerName are demo-session fields with no persisted column yet
+      // (D-016 scope); keep the session's copy so an API refresh cannot wipe them.
+      const incoming = existing
+        ? {
+            ...action.partner,
+            ownerName: action.partner.ownerName ?? existing.ownerName,
+            notes: action.partner.notes ?? existing.notes,
+            lastActivityAt: new Date().toISOString(),
+          }
+        : action.partner;
+      return {
+        ...state,
+        partners: existing
+          ? state.partners.map((p) => (p.id === incoming.id ? incoming : p))
+          : [...state.partners, incoming],
+      };
+    }
+
+    case "UPSERT_LIVE_CONTACT": {
+      const existing = state.contacts.find((c) => c.id === action.contact.id);
+      // addedAt is a demo-session timestamp (no stored column); keep it stable.
+      const contact = existing
+        ? { ...action.contact, addedAt: existing.addedAt }
+        : action.contact;
+      const next: DemoState = {
+        ...state,
+        contacts: existing
+          ? state.contacts.map((c) => (c.id === contact.id ? contact : c))
+          : [...state.contacts, contact],
+      };
+      return patchPartner(next, contact.partnerId);
+    }
+
+    case "JOURNAL":
+      return log(state, action.entry);
+
+    case "MARK_CANDIDATE_REVIEWED": {
+      const now = new Date().toISOString();
+      return {
+        ...state,
+        candidates: state.candidates.map((c) =>
+          c.id === action.candidateId
+            ? {
+                ...c,
+                reviewStatus: action.outcome,
+                reviewReason: action.note || "Accepted after human review (demo).",
+                reviewedBy: state.liveUser?.email ?? "Demo session",
+                reviewedAt: now,
+              }
+            : c,
+        ),
+      };
+    }
 
     case "ADD_PARTNER": {
       const seq = state.seq + 1;
@@ -1019,13 +1151,25 @@ export interface DemoContextValue {
   dispatch: React.Dispatch<DemoAction>;
 }
 
+/** Raw store context. The public demo context (re-provided by the runtime layer with
+ * a wrapped dispatch) is `DemoContext` below; `useDemo` consumers never see this. */
+export const StoreContext = createContext<DemoContextValue | null>(null);
+
 const DemoContext = createContext<DemoContextValue | null>(null);
 
-export function DemoProvider({ children }: { children: React.ReactNode }) {
+export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, initialState);
   const value = useMemo(() => ({ state, dispatch }), [state]);
-  return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
+  return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
+
+export function useDemoStore(): DemoContextValue {
+  const ctx = useContext(StoreContext);
+  if (!ctx) throw new Error("useDemoStore must be used inside <DemoStoreProvider>");
+  return ctx;
+}
+
+export { DemoContext };
 
 export function useDemo(): DemoContextValue {
   const ctx = useContext(DemoContext);

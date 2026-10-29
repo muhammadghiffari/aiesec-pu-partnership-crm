@@ -19,6 +19,7 @@ import {
   VerificationBadge,
 } from "../components/badges";
 import { friendlyDate, idr, relativeDay } from "../format";
+import { useDemoRuntime } from "../live/provider";
 import { partnerRollup } from "../selectors";
 import { useDemo } from "../store";
 import type { IndustryCode, LifecycleStage, SourceTier } from "../types";
@@ -629,8 +630,8 @@ function EditPartnerModal({
   onClose: () => void;
   partnerId: string;
 }) {
-  const { state, dispatch } = useDemo();
-  const toast = useToast();
+  const { state } = useDemo();
+  const runtime = useDemoRuntime();
   const partner = state.partners.find((p) => p.id === partnerId);
   const [name, setName] = useState(partner?.name ?? "");
   const [domain, setDomain] = useState(partner?.websiteDomain ?? "");
@@ -638,6 +639,7 @@ function EditPartnerModal({
   const [industry, setIndustry] = useState<IndustryCode>(partner?.industry ?? "OTHERS");
   const [notes, setNotes] = useState(partner?.notes ?? "");
   const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   // keep fields in sync when editing a different partner
   useEffect(() => {
@@ -655,19 +657,21 @@ function EditPartnerModal({
       setErr("Partner name must be at least 2 characters.");
       return;
     }
-    dispatch({
-      type: "UPDATE_PARTNER",
-      id: partnerId,
-      patch: {
+    setBusy(true);
+    void runtime
+      .updatePartner(partnerId, {
         name: name.trim(),
         websiteDomain: domain.trim() || null,
         officialEmail: email.trim() || null,
         industry,
         notes: notes.trim() || null,
-      },
-    });
-    onClose();
-    toast.ok("Partner updated", "Changes are live in this demo session.");
+      })
+      .then((outcome) => {
+        setBusy(false);
+        if (outcome === "ok") onClose();
+        // "dupes"/"failed" keep the modal open: the wrapper surfaced the reason
+        // (possible duplicate or a server error) as a toast.
+      });
   }
 
   return (
@@ -679,8 +683,8 @@ function EditPartnerModal({
       footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          <Button variant="primary" icon="check" onClick={save}>
-            Save changes
+          <Button variant="primary" icon="check" onClick={save} disabled={busy}>
+            {busy ? "Saving…" : "Save changes"}
           </Button>
         </>
       }
@@ -732,7 +736,15 @@ function EditPartnerModal({
           ))}
         </select>
       </Field>
-      <Field label="Internal notes" htmlFor="ed-notes">
+      <Field
+        label="Internal notes"
+        htmlFor="ed-notes"
+        hint={
+          runtime.mode === "live"
+            ? "Demo-session only - notes are not stored in the database yet and stay in this session."
+            : undefined
+        }
+      >
         <textarea
           id="ed-notes"
           className="input"
@@ -755,8 +767,7 @@ function AddContactModal({
   onClose: () => void;
   partnerId: string;
 }) {
-  const { dispatch } = useDemo();
-  const toast = useToast();
+  const runtime = useDemoRuntime();
   const [name, setName] = useState("");
   const [title, setTitle] = useState("");
   const [email, setEmail] = useState("");
@@ -764,6 +775,7 @@ function AddContactModal({
   const [tier, setTier] = useState<SourceTier>("research");
   const [basis, setBasis] = useState("");
   const [errs, setErrs] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
 
   function reset() {
     setName("");
@@ -780,11 +792,12 @@ function AddContactModal({
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) e.email = "A valid email is required.";
     if (basis.trim().length < 3) e.basis = "A provenance / lawful-basis note is required.";
     setErrs(e);
-    if (Object.keys(e).length > 0) return;
-    dispatch({
-      type: "ADD_CONTACT",
-      partnerId,
-      contact: {
+    if (Object.keys(e).length > 0 || busy) return;
+    setBusy(true);
+    // The runtime wrapper journals/toasts: sandbox modes keep the original
+    // reducer behaviour, live modes persist via the M1-03 contact contract.
+    void runtime
+      .addContact(partnerId, {
         name: name.trim(),
         title: title.trim() || null,
         email: email.trim(),
@@ -792,14 +805,13 @@ function AddContactModal({
         sourceTier: tier,
         sourceUrl: null,
         lawfulBasisNote: basis.trim(),
-      },
-    });
-    reset();
-    onClose();
-    toast.ok(
-      "Contact added",
-      "Verification is unverified by default — verify identity and channels before outreach.",
-    );
+      })
+      .then((ok) => {
+        setBusy(false);
+        if (!ok) return; // the wrapper surfaced the failure (duplicate email, validation…)
+        reset();
+        onClose();
+      });
   }
 
   return (
@@ -811,8 +823,8 @@ function AddContactModal({
       footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          <Button variant="primary" icon="check" onClick={save}>
-            Add contact
+          <Button variant="primary" icon="check" onClick={save} disabled={busy}>
+            {busy ? "Saving…" : "Add contact"}
           </Button>
         </>
       }

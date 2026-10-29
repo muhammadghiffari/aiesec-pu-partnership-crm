@@ -11,6 +11,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ESSM_INDUSTRIES, SOURCE_TIERS } from "../../partners/types";
+import { useDemoRuntime } from "../live/provider";
 import { findPartnerDuplicates } from "../selectors";
 import { useDemo } from "../store";
 import type { IndustryCode, SourceTier } from "../types";
@@ -29,7 +30,8 @@ const PHONE_RE = /^$|^[+0-9][0-9 ()-]{4,24}$/;
 const URL_RE = /^$|^https:\/\/[^\s/$.?#].[^\s]*$/;
 
 export function NewPartnerScreen() {
-  const { state, dispatch } = useDemo();
+  const { state } = useDemo();
+  const runtime = useDemoRuntime();
   const toast = useToast();
   const router = useRouter();
 
@@ -53,6 +55,7 @@ export function NewPartnerScreen() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [dupeOpen, setDupeOpen] = useState(false);
   const [dupes, setDupes] = useState<{ id: string; name: string }[]>([]);
+  const [saving, setSaving] = useState(false);
 
   function validate(): FieldErrors {
     const e: FieldErrors = {};
@@ -78,7 +81,31 @@ export function NewPartnerScreen() {
     return e;
   }
 
-  function doSubmit(opts: { confirmedDuplicates?: boolean } = {}) {
+  function payload() {
+    return {
+      name: name.trim(),
+      websiteDomain: domain.trim() || null,
+      industry: industry as IndustryCode,
+      officialEmail: officialEmail.trim() || null,
+      sourceTier,
+      sourceUrl: sourceUrl.trim() || null,
+      lawfulBasisNote: basis.trim(),
+      notes: notes.trim() || "Created via the demo create-partner flow (record kept in this demo session only).",
+      contact: addContact
+        ? {
+            name: cName.trim(),
+            title: cTitle.trim() || null,
+            email: cEmail.trim(),
+            phone: cPhone.trim() || null,
+            sourceTier: cSource,
+            sourceUrl: sourceUrl.trim() || null,
+            lawfulBasisNote: cBasis.trim(),
+          }
+        : null,
+    };
+  }
+
+  async function doSubmit(opts: { confirmedDuplicates?: boolean } = {}) {
     const e = validate();
     setErrors(e);
     // Clear earlier feedback first: a stale "Check the form" toast must never sit
@@ -88,7 +115,9 @@ export function NewPartnerScreen() {
       toast.err("Check the form", "Some required fields need attention before saving.");
       return;
     }
+    if (saving) return;
     if (!opts.confirmedDuplicates) {
+      // Local advisory check stays; the server re-runs it authoritatively (409).
       const found = findPartnerDuplicates(state.partners, name.trim(), domain.trim() || null);
       if (found.length > 0) {
         setDupes(found.map((f) => ({ id: f.id, name: f.name })));
@@ -96,33 +125,19 @@ export function NewPartnerScreen() {
         return;
       }
     }
-    dispatch({
-      type: "ADD_PARTNER",
-      partner: {
-        name: name.trim(),
-        websiteDomain: domain.trim() || null,
-        industry: industry as IndustryCode,
-        officialEmail: officialEmail.trim() || null,
-        sourceTier,
-        sourceUrl: sourceUrl.trim() || null,
-        lawfulBasisNote: basis.trim(),
-        notes: notes.trim() || "Created via the demo create-partner flow (synthetic record).",
-        contact: addContact
-          ? {
-              name: cName.trim(),
-              title: cTitle.trim() || null,
-              email: cEmail.trim(),
-              phone: cPhone.trim() || null,
-              sourceTier: cSource,
-              sourceUrl: sourceUrl.trim() || null,
-              lawfulBasisNote: cBasis.trim(),
-            }
-          : null,
-      },
-    });
-    const newId = `p-${String(state.seq + 1).padStart(3, "0")}`;
-    toast.ok("Partner created", "The new synthetic record is live in this demo session only.");
-    router.push(`/demo/partners/${newId}`);
+    setSaving(true);
+    try {
+      const outcome = await runtime.addPartner(payload(), { confirmedDuplicates: opts.confirmedDuplicates });
+      if (!outcome) return; // the wrapper already surfaced the failure
+      if ("duplicates" in outcome) {
+        setDupes(outcome.duplicates.map((d) => ({ id: d.partnerId, name: d.name })));
+        setDupeOpen(true);
+        return;
+      }
+      router.push(`/demo/partners/${outcome.id}`);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -378,8 +393,13 @@ export function NewPartnerScreen() {
           <Button type="button" onClick={() => router.push("/demo/partners")}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary" icon="check">
-            Save partner
+          <Button
+            type="submit"
+            variant="primary"
+            icon="check"
+            disabled={saving}
+          >
+            {saving ? "Saving…" : "Save partner"}
           </Button>
         </div>
       </form>
