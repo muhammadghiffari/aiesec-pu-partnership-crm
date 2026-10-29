@@ -16,45 +16,42 @@
  */
 import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
 import { sessionId } from "../format";
 import {
-  DemoContext,
-  DemoStoreProvider,
-  useDemoStore,
   type DemoAction,
+  DemoContext,
+  type DemoDataMode,
+  type DemoRuntimeUser,
+  DemoStoreProvider,
+  type NewContactPayload,
+  type NewPartnerPayload,
+  type PartnerPatch,
+  useDemoStore,
 } from "../store";
-import type {
-  DemoContact,
-  DemoContactChannel,
-  NewContactPayload,
-  NewPartnerPayload,
-  PartnerPatch,
-  VerificationStatus,
-} from "../types";
+import type { DemoContact, DemoContactChannel, VerificationStatus } from "../types";
 import { ToastProvider, useToast } from "../ui/toast";
 import {
+  type APIContact,
+  type APIPartner,
   ApiError,
   createLivePartner,
+  type DemoStatusPayload,
+  type DuplicateLike,
   fetchDemoStatus,
   fetchLiveDirectory,
   patchLivePartner,
   sendDevSignIn,
   sendDevSignOut,
-  type DuplicateLike,
-  type APIContact,
-  type APIPartner,
-  type DemoStatusPayload,
 } from "./api";
 import { toDemoContact, toDemoPartner } from "./map";
-import type { DemoDataMode, DemoRuntimeUser } from "../store";
 
 /* ------------------------------------------------------------------ */
 /* Runtime API surface                                                */
@@ -85,8 +82,14 @@ export interface DemoRuntimeApi {
   signOutNow(): Promise<boolean>;
   /** Clear the demo session then re-sync (live = fresh read from the database). */
   resetAndSync(): Promise<void>;
-  addPartner(payload: NewPartnerPayload, opts?: { confirmedDuplicates?: boolean }): Promise<PartnerActionOutcome>;
-  updatePartner(id: string, patch: PartnerPatch & { confirmedDuplicates?: boolean }): Promise<"ok" | "dupes" | "failed">;
+  addPartner(
+    payload: NewPartnerPayload,
+    opts?: { confirmedDuplicates?: boolean },
+  ): Promise<PartnerActionOutcome>;
+  updatePartner(
+    id: string,
+    patch: PartnerPatch & { confirmedDuplicates?: boolean },
+  ): Promise<"ok" | "dupes" | "failed">;
   addContact(partnerId: string, contact: NewContactPayload): Promise<boolean>;
   verifyContact(input: VerifyInput): Promise<boolean>;
   setDnc(partnerId: string, contactId: string, active: boolean, reason: string): Promise<boolean>;
@@ -186,11 +189,20 @@ function RuntimeBridge({ children }: { children: ReactNode }) {
       else if (error.status === 403)
         toast.err("Not allowed", "Your role does not permit this change in the CRM policy.");
       else if (error.code === "service_unavailable")
-        toast.err("CRM service unavailable", "Persistence is not configured; the demo stays in sandbox mode.");
+        toast.err(
+          "CRM service unavailable",
+          "Persistence is not configured; the demo stays in sandbox mode.",
+        );
       else if (error.status === 0)
-        toast.err("Cannot reach the CRM API", "The local service did not respond; nothing was changed.");
+        toast.err(
+          "Cannot reach the CRM API",
+          "The local service did not respond; nothing was changed.",
+        );
       else if (error.code === "validation_failed")
-        toast.err("Validation failed", error.issues[0]?.message ?? "Check the fields and try again.");
+        toast.err(
+          "Validation failed",
+          error.issues[0]?.message ?? "Check the fields and try again.",
+        );
       else if (error.code === "not_found")
         toast.err("Record not found", "The database no longer has this record.");
       else toast.err(fallbackTitle, "The database did not accept the change.");
@@ -198,15 +210,17 @@ function RuntimeBridge({ children }: { children: ReactNode }) {
     [toast],
   );
 
-  const journal = useCallback(
-    (kind: string, partnerId: string | null, summary: string) => {
-      dispatchRef.current({
-        type: "JOURNAL",
-        entry: { kind, partnerId, summary, href: partnerId ? `/demo/partners/${partnerId}` : "/demo/partners" },
-      });
-    },
-    [],
-  );
+  const journal = useCallback((kind: string, partnerId: string | null, summary: string) => {
+    dispatchRef.current({
+      type: "JOURNAL",
+      entry: {
+        kind,
+        partnerId,
+        summary,
+        href: partnerId ? `/demo/partners/${partnerId}` : "/demo/partners",
+      },
+    });
+  }, []);
 
   /* ---------------- create partner (live ⇆ sandbox) ---------------- */
 
@@ -243,18 +257,29 @@ function RuntimeBridge({ children }: { children: ReactNode }) {
             : undefined,
         });
         dispatchRef.current({ type: "UPSERT_LIVE_PARTNER", partner: toDemoPartner(saved) });
-        journal("created", saved.id, `Created ${saved.name} from the Add-partner flow (persisted in PostgreSQL).`);
-        toast.ok("Partner created", "The new record is stored in PostgreSQL (crm_dev) with an audit entry.");
+        journal(
+          "created",
+          saved.id,
+          `Created ${saved.name} from the Add-partner flow (persisted in PostgreSQL).`,
+        );
+        toast.ok(
+          "Partner created",
+          "The new record is stored in PostgreSQL (crm_dev) with an audit entry.",
+        );
         return { id: saved.id };
       } catch (error) {
         if (error instanceof ApiError) {
           if (
-            (error.code === "duplicate_confirmation_required" || error.code === "duplicate_partner") &&
+            (error.code === "duplicate_confirmation_required" ||
+              error.code === "duplicate_partner") &&
             error.duplicates.length
           )
             return { duplicates: error.duplicates };
           if (error.code === "duplicate_contact")
-            toast.err("Duplicate email on file", "A contact with this email already exists for the partner on file.");
+            toast.err(
+              "Duplicate email on file",
+              "A contact with this email already exists for the partner on file.",
+            );
           else liveErrorToast(error, "Could not create the partner");
         } else liveErrorToast(error, "Could not create the partner");
         return null;
@@ -293,8 +318,15 @@ function RuntimeBridge({ children }: { children: ReactNode }) {
           confirmDuplicate: confirmed || undefined,
         });
         dispatchRef.current({ type: "UPSERT_LIVE_PARTNER", partner: toDemoPartner(saved) });
-        journal("edited", id, `Edited organization details after a persisted PATCH (audit entry recorded).`);
-        toast.ok("Partner updated", "Change stored in PostgreSQL (crm_dev). Notes stay demo-session-only.");
+        journal(
+          "edited",
+          id,
+          `Edited organization details after a persisted PATCH (audit entry recorded).`,
+        );
+        toast.ok(
+          "Partner updated",
+          "Change stored in PostgreSQL (crm_dev). Notes stay demo-session-only.",
+        );
         return "ok";
       } catch (error) {
         if (error instanceof ApiError && error.isDuplicate) {
@@ -324,7 +356,10 @@ function RuntimeBridge({ children }: { children: ReactNode }) {
           partnerId,
           contact,
         });
-        toast.ok("Contact added", "The synthetic contact is demo-session only and needs verification.");
+        toast.ok(
+          "Contact added",
+          "The synthetic contact is demo-session only and needs verification.",
+        );
         return true;
       }
       try {
@@ -339,15 +374,28 @@ function RuntimeBridge({ children }: { children: ReactNode }) {
         });
         const mapped = toDemoContact(saved, new Date().toISOString());
         dispatchRef.current({ type: "UPSERT_LIVE_CONTACT", contact: mapped });
-        journal("contact-added", partnerId, `Added contact ${saved.name} (persisted; verification pending).`);
-        toast.ok("Contact added", "Stored in PostgreSQL (crm_dev). Verify the contact before outreach.");
+        journal(
+          "contact-added",
+          partnerId,
+          `Added contact ${saved.name} (persisted; verification pending).`,
+        );
+        toast.ok(
+          "Contact added",
+          "Stored in PostgreSQL (crm_dev). Verify the contact before outreach.",
+        );
         return true;
       } catch (error) {
         if (error instanceof ApiError && error.code === "duplicate_contact")
-          toast.err("Duplicate email on file", "A contact with this email already exists for this partner.");
+          toast.err(
+            "Duplicate email on file",
+            "A contact with this email already exists for this partner.",
+          );
         else if (error instanceof ApiError && error.code === "duplicate_confirmation_required") {
           const dupe = error.duplicates[0];
-          toast.err("Possible duplicate partner", dupe?.name ?? "The record looks like an existing partner.");
+          toast.err(
+            "Possible duplicate partner",
+            dupe?.name ?? "The record looks like an existing partner.",
+          );
         } else liveErrorToast(error, "Could not add the contact");
         return false;
       }
@@ -396,7 +444,10 @@ function RuntimeBridge({ children }: { children: ReactNode }) {
         const mapped = {
           ...toDemoContact(saved, loadedAt),
           identityMethod: input.method || null,
-          channels: toDemoContact(saved, loadedAt).channels.map((c) => ({ ...c, method: input.method || null })),
+          channels: toDemoContact(saved, loadedAt).channels.map((c) => ({
+            ...c,
+            method: input.method || null,
+          })),
         };
         dispatchRef.current({ type: "UPSERT_LIVE_CONTACT", contact: mapped });
         journal(
@@ -450,7 +501,10 @@ function RuntimeBridge({ children }: { children: ReactNode }) {
           contact: {
             ...mapped,
             dnc: mapped.dnc
-              ? { ...mapped.dnc, by: stateRef.current.liveUser?.email ?? "recorded in the CRM audit trail" }
+              ? {
+                  ...mapped.dnc,
+                  by: stateRef.current.liveUser?.email ?? "recorded in the CRM audit trail",
+                }
               : null,
           },
         });
@@ -481,7 +535,12 @@ function RuntimeBridge({ children }: { children: ReactNode }) {
       if (stateRef.current.mode !== "live") {
         // Same reducer path as the prototype: creates partner ⇄ candidate link.
         const resolution = partner.contact ? "LINK" : "NEW";
-        dispatchRef.current({ type: "ACCEPT_CANDIDATE", candidateId, resolution, note: "Accepted after human review." });
+        dispatchRef.current({
+          type: "ACCEPT_CANDIDATE",
+          candidateId,
+          resolution,
+          note: "Accepted after human review.",
+        });
         toast.ok("Candidate accepted", "The synthetic candidate became a demo partner record.");
         return { id: sessionId("p", stateRef.current.seq + 1) };
       }
@@ -520,13 +579,23 @@ function RuntimeBridge({ children }: { children: ReactNode }) {
           outcome: partner.contact ? "ACCEPTED_LINKED" : "ACCEPTED",
           note: "Accepted after human review (persisted in PostgreSQL).",
         });
-        journal("created", saved.id, `Candidate became a persisted partner record (audit entry recorded).`);
-        toast.ok("Candidate accepted", "The record is stored in PostgreSQL (crm_dev) as a partner.");
+        journal(
+          "created",
+          saved.id,
+          `Candidate became a persisted partner record (audit entry recorded).`,
+        );
+        toast.ok(
+          "Candidate accepted",
+          "The record is stored in PostgreSQL (crm_dev) as a partner.",
+        );
         return { id: saved.id };
       } catch (error) {
         if (error instanceof ApiError && error.isDuplicate) {
           const dupe = error.duplicates[0];
-          toast.err("Possible duplicate partner", dupe?.name ?? "This candidate looks like an existing partner.");
+          toast.err(
+            "Possible duplicate partner",
+            dupe?.name ?? "This candidate looks like an existing partner.",
+          );
         } else liveErrorToast(error, "Could not accept the candidate");
         return null;
       }
@@ -541,7 +610,10 @@ function RuntimeBridge({ children }: { children: ReactNode }) {
       try {
         await sendDevSignIn(email);
         await sync();
-        toast.ok("Signed in", `Local dev session for ${email} — real check-in, RBAC and audit, dev token only.`);
+        toast.ok(
+          "Signed in",
+          `Local dev session for ${email} — real check-in, RBAC and audit, dev token only.`,
+        );
         return true;
       } catch (error) {
         const api401 = error instanceof ApiError && (error.status === 401 || error.status === 403);
@@ -618,9 +690,7 @@ function RuntimeBridge({ children }: { children: ReactNode }) {
   // only read state keep working; flows that mutate call the runtime actions.
   return (
     <RuntimeContext.Provider value={runtime}>
-      <DemoContext.Provider value={raw}>
-        {children}
-      </DemoContext.Provider>
+      <DemoContext.Provider value={raw}>{children}</DemoContext.Provider>
     </RuntimeContext.Provider>
   );
 }

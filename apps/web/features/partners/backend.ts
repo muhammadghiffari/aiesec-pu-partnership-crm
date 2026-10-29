@@ -1,12 +1,10 @@
 import {
   createAuditService,
+  createDevIdentityVerifier,
+  createGoogleIdentityVerifier,
   createPartnerService,
   createSessionService,
   createStaticAllowlist,
-} from "@crm/core";
-import {
-  createDevIdentityVerifier,
-  createGoogleIdentityVerifier,
   type IdentityVerifier,
 } from "@crm/core";
 import type { SqlClient } from "@crm/db";

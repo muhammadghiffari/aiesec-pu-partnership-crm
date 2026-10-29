@@ -12,8 +12,9 @@
  * - the verification `method` wording is not persisted server-side; it stays in
  *   the demo journal/state until the next refresh.
  */
-import type { APIContact, APIPartner } from "./api";
+
 import type { DemoContact, DemoPartner, VerificationStatus } from "../types";
+import type { APIContact, APIPartner } from "./api";
 
 function fallbackVerification(value: string): VerificationStatus {
   return ["unverified", "pending", "verified", "failed"].includes(value)

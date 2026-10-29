@@ -7,8 +7,8 @@
  * genuine M0-05/M1-03 paths — no client-side shortcut around the server.
  */
 import { z } from "zod";
-import { ESSM_INDUSTRIES, VERIFICATION_STATUSES, SOURCE_TIERS } from "../../partners/types";
 import type { IndustryCode, SourceTier, VerificationStatus } from "../../partners/types";
+import { ESSM_INDUSTRIES, SOURCE_TIERS, VERIFICATION_STATUSES } from "../../partners/types";
 
 const industry = z.enum(
   ESSM_INDUSTRIES.map((entry) => entry.code) as [IndustryCode, ...IndustryCode[]],
@@ -69,7 +69,12 @@ export class ApiError extends Error {
   readonly issues: IssueLike[];
   readonly duplicates: DuplicateLike[];
 
-  constructor(code: string, status: number, issues: IssueLike[] = [], duplicates: DuplicateLike[] = []) {
+  constructor(
+    code: string,
+    status: number,
+    issues: IssueLike[] = [],
+    duplicates: DuplicateLike[] = [],
+  ) {
     super(code);
     this.name = "ApiError";
     this.code = code;
@@ -96,7 +101,11 @@ const duplicatesSchema = z.array(
 );
 const issuesSchema = z.array(z.object({ path: z.string(), message: z.string() }));
 
-async function request<T>(url: string, init: RequestInit, unwrap: (data: unknown) => T): Promise<T> {
+async function request<T>(
+  url: string,
+  init: RequestInit,
+  unwrap: (data: unknown) => T,
+): Promise<T> {
   let response: Response;
   try {
     response = await fetch(url, init);
@@ -180,12 +189,19 @@ export async function fetchDemoStatus(): Promise<DemoStatusPayload> {
 }
 
 function safeStatus(): DemoStatusPayload {
-  return { mode: "sandbox", signedIn: false, user: null, devSignIn: false, devEmail: null, unreachable: false };
+  return {
+    mode: "sandbox",
+    signedIn: false,
+    user: null,
+    devSignIn: false,
+    devEmail: null,
+    unreachable: false,
+  };
 }
 
 /** GET /api/partners?q= — the live directory is one master list with contacts. */
 export async function fetchLiveDirectory(): Promise<APIPartner[]> {
-  return request<{ partners: APIPartner[] }>("/api/partners?q=", { method: "GET" }, (data) => {
+  return request<APIPartner[]>("/api/partners?q=", { method: "GET" }, (data) => {
     const parsed = z.object({ partners: z.array(partnerRecordSchema) }).safeParse(data);
     if (!parsed.success) throw new ApiError("invalid_response", 200);
     return parsed.data.partners;
@@ -198,17 +214,21 @@ export function createLivePartner(input: unknown): Promise<APIPartner> {
 }
 
 /** PATCH /api/partners/:id — one endpoint per demo mutation kind. */
-export function patchLivePartner<T>(id: string, kind: string, input: unknown): Promise<T> {
-  return request(
-    `/api/partners/${id}`,
-    jsonInit("PATCH", { kind, ...input }),
-    (data) => data as T,
-  );
+export function patchLivePartner<T>(
+  id: string,
+  kind: string,
+  input: Record<string, unknown>,
+): Promise<T> {
+  return request(`/api/partners/${id}`, jsonInit("PATCH", { kind, ...input }), (data) => data as T);
 }
 
 /** POST /api/auth/session — dev sign-in mints the same DB-backed session cookie. */
 export async function sendDevSignIn(email: string): Promise<void> {
-  await request("/api/auth/session", jsonInit("POST", { idToken: `dev:${email}` }), () => undefined);
+  await request(
+    "/api/auth/session",
+    jsonInit("POST", { idToken: `dev:${email}` }),
+    () => undefined,
+  );
 }
 
 /** DELETE /api/auth/session — ends the DB-backed session (cookie is invalidated). */

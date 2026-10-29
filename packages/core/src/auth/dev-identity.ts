@@ -20,8 +20,7 @@
  * is allowed.
  */
 
-import { IdentityVerificationError } from "./google-id-token";
-import { normalizeEmail } from "./google-id-token";
+import { IdentityVerificationError, normalizeEmail } from "./google-id-token";
 import type { IdentityVerifier, VerifiedIdentity } from "./types";
 
 export const DEV_TOKEN_PREFIX = "dev:";

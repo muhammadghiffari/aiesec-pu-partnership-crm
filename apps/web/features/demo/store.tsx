@@ -326,9 +326,7 @@ function reducer(state: DemoState, action: DemoAction): DemoState {
     case "UPSERT_LIVE_CONTACT": {
       const existing = state.contacts.find((c) => c.id === action.contact.id);
       // addedAt is a demo-session timestamp (no stored column); keep it stable.
-      const contact = existing
-        ? { ...action.contact, addedAt: existing.addedAt }
-        : action.contact;
+      const contact = existing ? { ...action.contact, addedAt: existing.addedAt } : action.contact;
       const next: DemoState = {
         ...state,
         contacts: existing

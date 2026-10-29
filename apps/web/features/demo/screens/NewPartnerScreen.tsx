@@ -90,7 +90,9 @@ export function NewPartnerScreen() {
       sourceTier,
       sourceUrl: sourceUrl.trim() || null,
       lawfulBasisNote: basis.trim(),
-      notes: notes.trim() || "Created via the demo create-partner flow (record kept in this demo session only).",
+      notes:
+        notes.trim() ||
+        "Created via the demo create-partner flow (record kept in this demo session only).",
       contact: addContact
         ? {
             name: cName.trim(),
@@ -127,7 +129,9 @@ export function NewPartnerScreen() {
     }
     setSaving(true);
     try {
-      const outcome = await runtime.addPartner(payload(), { confirmedDuplicates: opts.confirmedDuplicates });
+      const outcome = await runtime.addPartner(payload(), {
+        confirmedDuplicates: opts.confirmedDuplicates,
+      });
       if (!outcome) return; // the wrapper already surfaced the failure
       if ("duplicates" in outcome) {
         setDupes(outcome.duplicates.map((d) => ({ id: d.partnerId, name: d.name })));
@@ -393,12 +397,7 @@ export function NewPartnerScreen() {
           <Button type="button" onClick={() => router.push("/demo/partners")}>
             Cancel
           </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            icon="check"
-            disabled={saving}
-          >
+          <Button type="submit" variant="primary" icon="check" disabled={saving}>
             {saving ? "Saving…" : "Save partner"}
           </Button>
         </div>

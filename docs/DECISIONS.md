@@ -21,6 +21,7 @@ Date baseline: 28 October 2026. Changes require product-owner approval and an AD
 | D-013 | Third developer is `hicesse`; Catalna continues as an existing developer | `hicesse` invited with write permission by bootstrap; do not guess Catalna's handle |
 | D-014 | Developer model choices are separate from application runtime LLM | Runtime provider/model must pass independent access and evaluation checks |
 | D-015 | Ghiffari's M1-03 Q-20 decision: Partner `sourceDescription` is required and maps to existing `partners.source`; Contact retains `lawful_basis_note`, and both records retain `source_url` | Replace draft Partner `lawfulBasisNote` in production forms/domain and the test-only mock; no migration for this field change |
+| D-016 | Dev-only demo sign-in gate + live-database demo mode for the `/demo` workspace | `CRM_DEMO_MODE=1` (and `NODE_ENV≠production`) swaps the Google verifier for a `dev:<email>` verifier; allowlist, active `users` row, session minting, RBAC and append-only audit stay the real M0-05/M1-03 path. In production the flag is ignored and Google verification is required. Demo `notes`/`ownerName` stay demo-session-only (no column). Demo DB tooling: `apps/web/scripts/dev-db-setup.mts` + `seeds/dev-seed.sql` (synthetic `example.invalid` data only), role `crm_app` + database `crm_dev` on the local service, secrets only in untracked `apps/web/.env.local` |
 
 ## Temporary defaults requiring confirmation before production
 

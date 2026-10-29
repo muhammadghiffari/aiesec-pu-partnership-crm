@@ -117,7 +117,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
         sub: `${ROLE_LABELS[runtime.liveUser!.role] ?? runtime.liveUser!.role} · PostgreSQL (crm_dev)`,
         email: runtime.liveUser!.email,
       }
-    : { name: "Nadia Prameswari", sub: "CRM Lead · Demo session", email: "nadia.prameswari@aiesec-demo.example" };
+    : {
+        name: "Nadia Prameswari",
+        sub: "CRM Lead · Demo session",
+        email: "nadia.prameswari@aiesec-demo.example",
+      };
 
   function isActive(href: string): boolean {
     if (href === "/demo/dashboard") return pathname === "/demo/dashboard" || pathname === "/demo";
@@ -410,8 +414,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <span>
               {live && runtime.unreachable ? (
                 <>
-                  <strong>Database unreachable.</strong> The CRM API is configured but PostgreSQL
-                  is not responding — partners &amp; contacts may be stale. Check the database and
+                  <strong>Database unreachable.</strong> The CRM API is configured but PostgreSQL is
+                  not responding — partners &amp; contacts may be stale. Check the database and
                   resync.
                 </>
               ) : live && !signedIn ? (

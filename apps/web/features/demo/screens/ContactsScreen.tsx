@@ -700,15 +700,13 @@ function DncModal({
       setErr("A reason is required (minimum 3 characters) — DNC decisions must be attributable.");
       return;
     }
-    if (busy) return;
+    if (!contact || busy) return;
     setBusy(true);
-    void runtime
-      .setDnc(contact.partnerId, contactId, activate, reason.trim())
-      .then((ok) => {
-        setBusy(false);
-        if (ok) onClose();
-        // a failure keeps the modal open; the wrapper explained why
-      });
+    void runtime.setDnc(contact.partnerId, contactId, activate, reason.trim()).then((ok) => {
+      setBusy(false);
+      if (ok) onClose();
+      // a failure keeps the modal open; the wrapper explained why
+    });
   }
 
   return (

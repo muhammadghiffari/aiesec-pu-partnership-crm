@@ -11,8 +11,8 @@
 import { useEffect, useRef, useState } from "react";
 import { ESSM_INDUSTRIES } from "../../partners/types";
 import { CandidateBadge, IndustryChip, industryLabel, JobBadge } from "../components/badges";
-import { useDemoRuntime } from "../live/provider";
 import { friendlyDate } from "../format";
+import { useDemoRuntime } from "../live/provider";
 import { indexById } from "../selectors";
 import { useDemo } from "../store";
 import type { DemoCandidate, IndustryCode, ProjectSupportCode } from "../types";
@@ -513,7 +513,8 @@ function ReviewModal({
       officialEmail: candidate!.contactDraft.email || null,
       sourceTier: candidate!.sourceTier,
       sourceUrl: candidate!.sourceUrl,
-      lawfulBasisNote: note.trim() || `Acceptance review of research source: ${candidate!.sourceLabel}.`,
+      lawfulBasisNote:
+        note.trim() || `Acceptance review of research source: ${candidate!.sourceLabel}.`,
       notes: "Accepted from the Prospecting review queue in this demo session.",
       contact,
     };
@@ -531,10 +532,7 @@ function ReviewModal({
       });
       setConfirm(null);
       onClose();
-      toast.ok(
-        "Candidate linked",
-        "No duplicate was created; the decision was recorded.",
-      );
+      toast.ok("Candidate linked", "No duplicate was created; the decision was recorded.");
       return;
     }
     setBusy(true);

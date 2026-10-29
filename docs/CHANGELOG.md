@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — live database demo mode (D-016) + M1-03 presentation prototype (`/demo`)
+
+- Dev-only demo sign-in gate: with `CRM_DEMO_MODE=1` (and `NODE_ENV≠production`) the web backend installs a `dev:<email>` identity verifier instead of the Google verifier; allowlist, active `users` row, session minting, RBAC and append-only audit stay the real path. In production the flag is ignored and Google verification is required.
+- New `GET /api/demo/status` data-mode probe; the `/demo` workspace reports whether it is serving the in-memory sandbox or the live PostgreSQL directory, with a `LIVE DB`/`DEMO MODE` pill, connection banners and dev sign-in.
+- Demo Partners/Contacts screens are wired to the persisted M1-03 API (create/edit partner, add contact, verification, DNC with reasons, duplicate 409 confirmation) while non-partner lifecycle modules remain synthetic in-memory.
+- Local database tooling: `apps/web/scripts/dev-db-setup.mts` applies typed migrations 0001–0005 plus the idempotent synthetic seed `apps/web/scripts/seeds/dev-seed.sql` (fictional `*.example.invalid` data; verified/unverified/DNC/failed contact states) into the local `crm_dev` database (role `crm_app`), matching the class diagram (34 tables).
+
 ## Unreleased — M1-03 presentation prototype (`/demo`)
 
 - Added the `/demo` presentation prototype: an in-memory, synthetic UI across the five fixed ESSM stages (Overview, Partners, Partner profile, Contacts, Research, Outreach, Meetings, LoA, Projects, Reports, Settings), reachable only under `/demo` so the real `/partners` module is untouched.

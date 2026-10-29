@@ -28,26 +28,28 @@ function json(status: Status) {
 export async function GET(request: Request) {
   const devSignIn = demoSignInEnabled();
   try {
-    return json(await withPartnerBackend(({ sessions }) =>
-      sessions.authenticate(readSessionCookie(request.headers)).then((result) => {
-        if (!result.ok) {
+    return json(
+      await withPartnerBackend(({ sessions }) =>
+        sessions.authenticate(readSessionCookie(request.headers)).then((result) => {
+          if (!result.ok) {
+            return {
+              mode: "live" as const,
+              signedIn: false,
+              user: null,
+              devSignIn,
+              devEmail: firstAllowlistedEmail(),
+            };
+          }
           return {
             mode: "live" as const,
-            signedIn: false,
-            user: null,
+            signedIn: true,
+            user: { email: result.principal.email, role: result.principal.accessRole },
             devSignIn,
-            devEmail: firstAllowlistedEmail(),
+            devEmail: null,
           };
-        }
-        return {
-          mode: "live" as const,
-          signedIn: true,
-          user: { email: result.principal.email, role: result.principal.accessRole },
-          devSignIn,
-          devEmail: null,
-        };
-      }),
-    ));
+        }),
+      ),
+    );
   } catch (error) {
     if (error instanceof PartnerBackendUnavailableError) return json({ mode: "sandbox" });
     // Configured but unreachable: the UI shows live-intended + a clear connection

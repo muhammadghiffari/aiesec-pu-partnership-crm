@@ -9,6 +9,27 @@ signing service.
 The real M1-03 partner module lives at `/partners` and is untouched by this
 prototype. Everything documented here is under `/demo`.
 
+## Live database demo mode (D-016, optional)
+
+By default the demo runs fully in-memory. With the local PostgreSQL configured,
+Partners & Contacts connect to the real M1-03 API + database through the same
+routes the production app uses (auth, RBAC and append-only audit included);
+every other module stays synthetic and labelled.
+
+Setup (local PostgreSQL 18 service on `127.0.0.1:5432`, visible in pgAdmin4):
+
+1. Create once: login role `crm_app` and database `crm_dev` (owner `crm_app`).
+2. Apply migrations 0001–0005 + the idempotent synthetic seed:
+   `DATABASE_URL="postgresql://crm_app:<role-password>@127.0.0.1:5432/crm_dev?sslmode=disable" pnpm tsx apps/web/scripts/dev-db-setup.mts`
+3. Configure the untracked `apps/web/.env.local` with `DATABASE_URL`,
+   `CRM_ALLOWED_EMAILS` (dev sign-in emails) and `CRM_DEMO_MODE=1`, then `pnpm dev`
+   and open `/demo`: the workspace shows a `LIVE DB` pill and offers the
+   dev sign-in while signed out. The dev token only relaxes the *verifier*;
+   allowlist, active `users` row, session minting, RBAC and audit are unchanged.
+4. Seeds are strictly synthetic (`*.example.invalid`); no real partner or
+   workbook data. In production `CRM_DEMO_MODE` is ignored and the Google
+   verifier is required (D-016).
+
 ## Start the prototype
 
 Prerequisites: Node >= 22 and pnpm 10.15 (`corepack enable` if pnpm is missing).
