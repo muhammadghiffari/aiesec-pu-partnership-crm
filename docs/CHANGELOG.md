@@ -84,3 +84,10 @@
 - M1-01's rate card and fixture tests updated to the versioned lifecycle.
 - Interim decisions Q-30..Q-32 recorded. The ESSM scoring formula is not implemented anywhere.
 
+### M3-02 — Packages, ProposalBenefit and pricing snapshots (FR-501..503)
+
+- Migration 0010: lines proven equal to a frozen catalog version (name, unit, version, optional catalog value), single rounding rule as a CHECK, `source` PACKAGE/CUSTOM with no double counting, one catalog version and currency per proposal, proposals created as DRAFT, total must equal package price + custom lines before sending, and a sent proposal and its lines are immutable.
+- `packages/core/src/pricing/`: `calc.ts` (pure integer arithmetic: thousandths quantities, round half up, per-line rounding, package/custom/hybrid totals, negotiated delta, overflow guards) and `service.ts` (create/replace/send/get; catalog version resolved by Asia/Jakarta date; each line snapshots name, unit, version, catalog value, agreed value, quantity, total; send re-derives the total).
+- Historical proposals cannot change: catalog versions are immutable (M3-01) and lines carry their own snapshot; tests activate a new version with different prices and prove the stored proposal is byte-identical.
+- M1-01 proposal tests adapted to the stricter rules. Interim decisions Q-33..Q-36 recorded.
+
