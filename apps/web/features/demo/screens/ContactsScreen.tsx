@@ -202,7 +202,15 @@ export function ContactsScreenInner() {
                 {contacts.map((c) => {
                   const partner = partnersById.get(c.partnerId);
                   return (
-                    <tr key={c.id} className="row-click">
+                    <tr
+                      key={c.id}
+                      className="row-click"
+                      onClick={(e) => {
+                        // Nested controls (the partner link) own their own click.
+                        if (e.target instanceof Element && e.target.closest("a,button")) return;
+                        setSelected(c.id);
+                      }}
+                    >
                       <td>
                         <button
                           type="button"
@@ -227,7 +235,7 @@ export function ContactsScreenInner() {
                       <td>
                         <Link
                           href={`/demo/partners/${c.partnerId}`}
-                          className="t-strong row-above"
+                          className="t-strong"
                           style={{ fontWeight: 540 }}
                         >
                           {partner?.name ?? "—"}

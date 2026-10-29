@@ -6,8 +6,9 @@
 - Demo store is a React reducer with no persistence: client-side navigation keeps session changes, a hard refresh reseeds, and "Reset demo data" reseeds on demand.
 - Implemented the product gates as behaviour rather than decoration: DNC overrides every verification state, identity and channel verification are separate facts, an unverified channel can never be stamped or presented as outreach-ready, LoA approval is refused to its own submitter (D-009), editing a reviewed draft invalidates the exact-version stamp, and duplicate creation requires an explicit human decision.
 - Feedback integrity: the create-partner flow clears earlier toasts before reporting a new outcome, so a stale "Check the form" error can never sit beside the `Partner created` success confirmation.
-- Accessibility: clickable table rows now carry one real control per row (a `Link` on partner rows, a `button` on contact and LoA rows) stretched across the row, giving native Enter activation, an accessible name and a visible row focus ring instead of a bare `tabIndex` on `<tr>`.
+- Accessibility: clickable table rows no longer rely on a bare `tabIndex` on `<tr>`. Each row carries one real control — a `Link` on partner rows (covering the whole row), a `button` on contact and LoA rows (with a guarded row click so cells holding other links stay usable) — giving native Enter/Space activation, an accessible name and a visible row focus ring.
 - Fixed an inert primary action: "Prepare outreach to this contact" was an `<a>` nested inside a `<button>`, so the drawer's close handler won an unreachable race against navigation. It is now a `ButtonLink` and lands on `/demo/outreach?contact=…` with the recipient preselected.
+- Fixed inert top-bar triggers: the notifications bell and the user menu carried `aria-expanded` but no click handler, so they never opened. Both now toggle their popover (and declare `aria-haspopup="dialog"`).
 - Documented startup, the five-minute walkthrough, reset behaviour and the simulated surface in `docs/PROTOTYPE_DEMO_GUIDE.md`.
 - Added `tests/demo/demo-selectors.test.ts` covering DNC, channel gating, D-009, duplicate detection and report reconciliation.
 

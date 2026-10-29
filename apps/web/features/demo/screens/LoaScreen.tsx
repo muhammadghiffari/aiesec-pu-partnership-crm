@@ -70,7 +70,15 @@ export function LoaScreen() {
               </thead>
               <tbody>
                 {agreements.map((a) => (
-                  <tr key={a.id} className="row-click">
+                  <tr
+                    key={a.id}
+                    className="row-click"
+                    onClick={(e) => {
+                      // Nested controls (the open button) own their own click.
+                      if (e.target instanceof Element && e.target.closest("a,button")) return;
+                      setSelected(a.id);
+                    }}
+                  >
                     <td className="t-strong nowrap">
                       <button
                         type="button"

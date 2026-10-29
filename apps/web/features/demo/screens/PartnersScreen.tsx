@@ -320,7 +320,7 @@ export function PartnersScreenInner() {
                     const primary = r?.contacts[0];
                     const next = r?.cycle?.nextAction;
                     return (
-                      <tr key={p.id} className="t-row row-click">
+                      <tr key={p.id} className="t-row row-click row-stretch">
                         <td>
                           <Link
                             href={`/demo/partners/${p.id}`}

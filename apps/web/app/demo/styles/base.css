@@ -863,9 +863,11 @@ tr.t-row a.t-strong:hover {
 
 /*
  * Rows that open a record carry one real control (link or button) in their
- * first cell. That control is stretched over the whole row, so mouse users can
- * click anywhere while keyboard and screen-reader users get link/button
- * semantics, a focus ring and Enter/Space activation for free.
+ * first cell, so keyboard and screen-reader users get link/button semantics,
+ * a focus ring and Enter/Space activation instead of an unlabelled <tr>.
+ * `row-stretch` additionally paints that control over the whole row for mouse
+ * users; tables with other interactive cells use the row click handler instead
+ * so the two never overlap.
  */
 .tbl tbody tr.row-click {
   position: relative;
@@ -887,15 +889,10 @@ tr.t-row a.t-strong:hover {
   text-align: left;
   cursor: pointer;
 }
-.row-open::after {
+.tbl tbody tr.row-stretch .row-open::after {
   content: "";
   position: absolute;
   inset: 0;
-}
-/* Nested controls (e.g. the partner link inside a contact row) stay above the overlay. */
-.row-above {
-  position: relative;
-  z-index: 1;
 }
 
 .mini-tbl {

@@ -125,9 +125,12 @@ These are the parts of the product worth demoing as rules rather than screens:
   globally.
 - Clickable table rows are not bare `<tr onClick>` elements. Each carries one
   real control in its first cell — a `<Link>` on partner rows, a `<button>` on
-  contact and LoA rows — visually stretched across the row. Keyboard users get
-  native Enter activation, a visible focus ring on the row, and a control with
-  an accessible name.
+  contact and LoA rows — so keyboard and screen-reader users get native
+  Enter/Space activation, an accessible name and a visible focus ring on the
+  row. Partner rows let that link cover the whole row; contact and LoA rows
+  keep a guarded row click (their cells contain other links and controls), so a
+  mouse click anywhere still opens the record while the nested controls keep
+  their own behaviour.
 - Drawers and dialogs are native `<dialog>` elements with labels, and close on
   Escape.
 
