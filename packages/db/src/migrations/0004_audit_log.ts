@@ -8,8 +8,9 @@ import type { Migration } from "./types";
  * UPDATE, DELETE and TRUNCATE on this table from the application role (docs/RUNBOOK.md); a
  * superuser or table owner can still drop triggers, which is why role separation is required.
  *
- * Deviation from the diagram (recorded as Q-13): entity_id is text, not uuid, because M0-06
- * events reference non-row targets (for example the denied authorization action name).
+ * Q-13 diagram/schema reconciliation: entity_id is text because M0-06 events may reference
+ * non-row targets (for example the denied authorization action name). The Class Diagram uses
+ * text as well; retain this physical type unless audit-target semantics change.
  */
 export const migration0004: Migration = {
   version: 4,
