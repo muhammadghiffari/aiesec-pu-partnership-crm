@@ -2,8 +2,8 @@
 
 /**
  * Small data-viz primitives backed by CSS/SVG only (no charting library
- * exists in the repo, and none is added): pipeline bars, a generic bar list
- * and an 8-week activity trend line.
+ * exists in the repo, and none is added): pipeline bars, a generic bar list,
+ * an 8-week activity trend line, and a donut chart.
  */
 import Link from "next/link";
 
@@ -88,9 +88,17 @@ export function BarList({
 
 /* --------------------------- trend line chart ------------------------ */
 
-export function TrendArea({ points, ariaLabel }: { points: Point[]; ariaLabel?: string }) {
+export function TrendArea({
+  points,
+  ariaLabel,
+  height = 140,
+}: {
+  points: Point[];
+  ariaLabel?: string;
+  height?: number;
+}) {
   const W = 640;
-  const H = 140;
+  const H = height;
   const PAD_X = 8;
   const PAD_TOP = 14;
   const PAD_BOTTOM = 10;
@@ -114,9 +122,16 @@ export function TrendArea({ points, ariaLabel }: { points: Point[]; ariaLabel?: 
       >
         <defs>
           <linearGradient id="demo-trend-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#0d7d71" stopOpacity="0.22" />
-            <stop offset="100%" stopColor="#0d7d71" stopOpacity="0.02" />
+            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.01" />
           </linearGradient>
+          <filter id="demo-glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
         {[0.25, 0.5, 0.75, 1].map((f) => (
           <line
@@ -125,7 +140,7 @@ export function TrendArea({ points, ariaLabel }: { points: Point[]; ariaLabel?: 
             x2={W - PAD_X}
             y1={y(max * f)}
             y2={y(max * f)}
-            stroke="#e4e9ee"
+            stroke="rgba(148,163,196,0.1)"
             strokeWidth="1"
           />
         ))}
@@ -133,27 +148,30 @@ export function TrendArea({ points, ariaLabel }: { points: Point[]; ariaLabel?: 
         <path
           d={linePath}
           fill="none"
-          stroke="#0d7d71"
-          strokeWidth="2"
+          stroke="#22d3ee"
+          strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
+          filter="url(#demo-glow)"
+          className="trend-line"
         />
         {points.map((p, i) => (
           <g key={p.label}>
+            <circle cx={x(i)} cy={y(p.count)} r={5} fill="#22d3ee" opacity="0.18" />
             <circle
               cx={x(i)}
               cy={y(p.count)}
-              r={3.5}
-              fill="#fff"
-              stroke="#0d7d71"
+              r={3}
+              fill="#0b1020"
+              stroke="#22d3ee"
               strokeWidth="2"
             />
             <text
               x={x(i)}
-              y={y(p.count) - 7}
+              y={y(p.count) - 9}
               textAnchor="middle"
               fontSize="10"
-              fill="#67768a"
+              fill="#96a1b7"
               fontWeight="600"
             >
               {p.count > 0 ? p.count : ""}
@@ -164,6 +182,103 @@ export function TrendArea({ points, ariaLabel }: { points: Point[]; ariaLabel?: 
       <div className="trend-x" aria-hidden="true">
         {points.map((p) => (
           <span key={p.label}>{p.label}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ----------------------------- donut chart --------------------------- */
+
+const DONUT_COLORS = ["#22d3ee", "#a78bfa", "#34d399", "#fbbf24", "#f87171"];
+
+export function DonutChart({
+  segments,
+  size = 140,
+  thickness = 22,
+  ariaLabel,
+}: {
+  segments: { label: string; value: number; color?: string }[];
+  size?: number;
+  thickness?: number;
+  ariaLabel?: string;
+}) {
+  const total = segments.reduce((s, seg) => s + seg.value, 0);
+  if (total === 0) return <p className="muted tiny">No data yet.</p>;
+
+  const r = (size - thickness) / 2;
+  const cx = size / 2;
+  const cy = size / 2;
+  const circumference = 2 * Math.PI * r;
+
+  let accumulated = 0;
+  const arcs = segments.map((seg, i) => {
+    const pct = seg.value / total;
+    const dashLength = pct * circumference;
+    const dashOffset = -accumulated * circumference;
+    accumulated += pct;
+    return { ...seg, dashLength, dashOffset, color: seg.color ?? DONUT_COLORS[i % 5] };
+  });
+
+  return (
+    <div className="donut-wrap">
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        role="img"
+        aria-label={ariaLabel ?? "Stage distribution"}
+      >
+        {/* background ring */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={r}
+          fill="none"
+          stroke="rgba(148,163,196,0.1)"
+          strokeWidth={thickness}
+        />
+        {arcs.map((arc) => (
+          <circle
+            key={arc.label}
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="none"
+            stroke={arc.color}
+            strokeWidth={thickness}
+            strokeDasharray={`${arc.dashLength} ${circumference - arc.dashLength}`}
+            strokeDashoffset={arc.dashOffset}
+            strokeLinecap="butt"
+            transform={`rotate(-90 ${cx} ${cy})`}
+            style={{ transition: "stroke-dasharray 0.6s ease, stroke-dashoffset 0.6s ease" }}
+          />
+        ))}
+        {/* center label */}
+        <text
+          x={cx}
+          y={cy - 5}
+          textAnchor="middle"
+          fill="#fff"
+          fontSize="22"
+          fontWeight="700"
+          letterSpacing="-0.03em"
+        >
+          {total}
+        </text>
+        <text x={cx} y={cy + 12} textAnchor="middle" fill="#96a1b7" fontSize="10" fontWeight="600">
+          total
+        </text>
+      </svg>
+      <div className="donut-legend">
+        {arcs.map((arc) => (
+          <div className="donut-key" key={arc.label}>
+            <i style={{ background: arc.color }} />
+            <span className="trunc" title={arc.label}>
+              {arc.label}
+            </span>
+            <b>{arc.value}</b>
+          </div>
         ))}
       </div>
     </div>

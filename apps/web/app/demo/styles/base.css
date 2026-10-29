@@ -152,7 +152,7 @@ html:has(.lp) body {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: rgba(7, 10, 20, 0.86);
+  background: rgba(6, 17, 31, 0.92);
   backdrop-filter: blur(14px);
   border-right: 1px solid var(--line);
   color: var(--ink-2);
@@ -713,7 +713,9 @@ html:has(.lp) body {
   backdrop-filter: blur(10px);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
-  box-shadow: var(--shadow);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    var(--shadow);
   min-width: 0;
 }
 .card-hd {
@@ -874,6 +876,82 @@ a.stat:hover .stat-go {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
+}
+
+/* ----------- 4-column inset-border metric row (dashboard v2) ---------- */
+
+.dash-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: linear-gradient(180deg, rgba(17, 24, 43, 0.72), rgba(11, 16, 32, 0.72));
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.metric-cell {
+  position: relative;
+  min-width: 0;
+}
+.metric-cell + .metric-cell::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 1px;
+  background: var(--line);
+}
+.metric-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px 16px;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    background 0.14s var(--ease),
+    transform 0.14s var(--ease);
+}
+a.metric-inner:hover {
+  background: rgba(148, 163, 196, 0.04);
+  text-decoration: none;
+}
+.metric-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.metric-label {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  font-weight: 560;
+}
+.metric-value {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.metric-foot {
+  font-size: 12px;
+  color: var(--ink-3);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: auto;
+}
+
+/* -------- 2-column analytics (trend + donut) -------- */
+
+.dash-analytics {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
 }
 
 /* ------------------------------- inputs ------------------------------ */
@@ -1211,6 +1289,10 @@ tr.t-row:hover a.t-strong {
   font-weight: 620;
   color: var(--ink);
 }
+.up {
+  color: var(--green);
+  font-weight: 600;
+}
 .nowrap {
   white-space: nowrap;
 }
@@ -1292,6 +1374,12 @@ tr.t-row:hover a.t-strong {
   .dash-kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .dash-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dash-analytics {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .grid-main {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1309,7 +1397,7 @@ tr.t-row:hover a.t-strong {
     transform: translateX(-100%);
     transition: transform 0.22s var(--ease);
     box-shadow: var(--shadow-lg);
-    background: rgba(7, 10, 20, 0.98);
+    background: rgba(6, 17, 31, 0.98);
   }
   .side.open {
     transform: translateX(0);
@@ -1352,6 +1440,17 @@ tr.t-row:hover a.t-strong {
 @media (max-width: 640px) {
   .dash-kpis {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .dash-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dash-metrics .metric-cell + .metric-cell::before {
+    left: 14px;
+    right: 14px;
+    top: 0;
+    bottom: auto;
+    width: auto;
+    height: 1px;
   }
   .top-crumb .crumb-root,
   .top-crumb .crumb-sep {

@@ -18,9 +18,9 @@ import {
   tasksDueSoon,
 } from "../selectors";
 import { useDemo } from "../store";
-import { PipelineBars, TrendArea } from "../ui/charts";
+import { DonutChart, PipelineBars, TrendArea } from "../ui/charts";
 import { Icon } from "../ui/Icon";
-import { Badge, ButtonLink, Card, EmptyState, PageHeader, StatCard } from "../ui/primitives";
+import { Badge, ButtonLink, Card, EmptyState, PageHeader } from "../ui/primitives";
 import { useToast } from "../ui/toast";
 
 const ACT_TONE: Record<
@@ -70,6 +70,12 @@ export function DashboardScreen() {
     .sort((a, b) => b.at.localeCompare(a.at))
     .slice(0, 7);
 
+  /* Stage distribution for the donut chart. */
+  const donutSegments = stages.map((s) => ({
+    label: STAGE_LABELS[s.stage],
+    value: s.count,
+  }));
+
   return (
     <div className="page">
       <PageHeader
@@ -94,45 +100,95 @@ export function DashboardScreen() {
         }
       />
 
-      <div className="dash-kpis">
-        <StatCard
-          href="/demo/partners"
-          icon="briefcase"
-          iconTone="teal"
-          label="Partner records"
-          value={counts.partners}
-          foot={
-            <>
-              <span className="up">Live count</span> of the directory below
-            </>
-          }
-        />
-        <StatCard
-          href="/demo/partners"
-          icon="zap"
-          iconTone="blue"
-          label="Active partnership cycles"
-          value={counts.activeCycles}
-          foot="Cycles with live sales or delivery motion"
-        />
-        <StatCard
-          href="/demo/research"
-          icon="sparkles"
-          iconTone="amber"
-          label="Research candidates pending"
-          value={counts.pendingCandidates}
-          foot="Awaiting a human review decision"
-        />
-        <StatCard
-          href="/demo/partners"
-          icon="clock"
-          iconTone="green"
-          label="Follow-ups due (14 days)"
-          value={counts.followUpsDueSoon}
-          foot="Open tasks on partner records"
-        />
+      {/* -------- 4-column inset-border metric row -------- */}
+      <div className="dash-metrics">
+        <div className="metric-cell">
+          <Link href="/demo/partners" className="metric-inner" aria-label="Partner records">
+            <span className="metric-top">
+              <span className="stat-ico i-teal">
+                <Icon name="briefcase" size={15} />
+              </span>
+              <span className="metric-label">Partner records</span>
+            </span>
+            <span className="metric-value">{counts.partners}</span>
+            <span className="metric-foot">
+              <span className="up">Live count</span> of the directory
+            </span>
+          </Link>
+        </div>
+        <div className="metric-cell">
+          <Link
+            href="/demo/partners"
+            className="metric-inner"
+            aria-label="Active partnership cycles"
+          >
+            <span className="metric-top">
+              <span className="stat-ico i-blue">
+                <Icon name="zap" size={15} />
+              </span>
+              <span className="metric-label">Active cycles</span>
+            </span>
+            <span className="metric-value">{counts.activeCycles}</span>
+            <span className="metric-foot">Live sales or delivery motion</span>
+          </Link>
+        </div>
+        <div className="metric-cell">
+          <Link
+            href="/demo/research"
+            className="metric-inner"
+            aria-label="Research candidates pending"
+          >
+            <span className="metric-top">
+              <span className="stat-ico i-amber">
+                <Icon name="sparkles" size={15} />
+              </span>
+              <span className="metric-label">Pending reviews</span>
+            </span>
+            <span className="metric-value">{counts.pendingCandidates}</span>
+            <span className="metric-foot">Awaiting human decision</span>
+          </Link>
+        </div>
+        <div className="metric-cell">
+          <Link href="/demo/partners" className="metric-inner" aria-label="Follow-ups due (14d)">
+            <span className="metric-top">
+              <span className="stat-ico i-green">
+                <Icon name="clock" size={15} />
+              </span>
+              <span className="metric-label">Follow-ups due</span>
+            </span>
+            <span className="metric-value">{counts.followUpsDueSoon}</span>
+            <span className="metric-foot">Within the next 14 days</span>
+          </Link>
+        </div>
       </div>
 
+      {/* -------- 2-column analytics: trend (large) + donut (right) -------- */}
+      <div className="dash-analytics">
+        <Card
+          title="Activity over the last 8 weeks"
+          sub="Synthetic events recorded in the demo book (period 5 Sep – 29 Oct 2026)"
+          side={
+            <ButtonLink href="/demo/reports" size="sm" variant="ghost" icon="chart">
+              Reports
+            </ButtonLink>
+          }
+        >
+          <TrendArea
+            points={weeks.map((w) => ({ label: w.label, count: w.count }))}
+            ariaLabel="Weekly activity trend in the demo dataset"
+            height={180}
+          />
+        </Card>
+
+        <Card title="Stage distribution" sub="Partners by current lifecycle stage">
+          <DonutChart
+            segments={donutSegments}
+            ariaLabel="Partner distribution across five ESSM stages"
+          />
+        </Card>
+      </div>
+
+      {/* -------- pipeline + recent activity -------- */}
       <div className="grid-2" style={{ gridTemplateColumns: "1.6fr 1fr" }}>
         <Card
           title="Partnership pipeline"
@@ -191,6 +247,7 @@ export function DashboardScreen() {
         </Card>
       </div>
 
+      {/* -------- 3-column: tasks + partners + research queue -------- */}
       <div className="grid-3">
         <Card
           title="Upcoming follow-ups & tasks"
@@ -357,16 +414,6 @@ export function DashboardScreen() {
           )}
         </Card>
       </div>
-
-      <Card
-        title="Activity over the last 8 weeks"
-        sub="Synthetic events recorded in the demo book (period 5 Sep – 29 Oct 2026)"
-      >
-        <TrendArea
-          points={weeks.map((w) => ({ label: w.label, count: w.count }))}
-          ariaLabel="Weekly activity trend in the demo dataset"
-        />
-      </Card>
     </div>
   );
 }
