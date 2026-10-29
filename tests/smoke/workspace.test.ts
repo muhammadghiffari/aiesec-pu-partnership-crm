@@ -43,6 +43,14 @@ function workspaceManifests(): { dir: string; manifest: PackageManifest }[] {
 // Agreed minimal M0-02 dependency set. Anything else must arrive through a later
 // issue with its own justification (AGENTS.md: no new dependencies without need).
 const ALLOWED_RUNTIME_DEPS = new Set(["next", "react", "react-dom"]);
+// Per-package runtime dependencies approved by later issues. Each entry needs a justification and
+// is scoped to the single package that needs it (no global widening).
+const APPROVED_PACKAGE_RUNTIME_DEPS: Record<string, readonly string[]> = {
+  // M0-05: AGENTS.md mandates Zod at every boundary (identity token claims, allowlist entries).
+  "@crm/core": ["zod"],
+  // M1-03: domain/SQL service imports and PostgreSQL driver for authenticated API requests.
+  "@crm/web": ["zod", "@crm/core", "@crm/db", "pg"],
+};
 const ALLOWED_DEV_DEPS = new Set([
   "typescript",
   "vitest",
@@ -50,12 +58,15 @@ const ALLOWED_DEV_DEPS = new Set([
   "@types/node",
   "@types/react",
   "@types/react-dom",
+  "@types/pg",
   "@crm/ai",
   "@crm/config",
   "@crm/core",
   "@crm/db",
   "@crm/docs",
   "@crm/worker",
+  // M1-01: in-process PostgreSQL for migration/constraint tests in @crm/db (dev only).
+  "@electric-sql/pglite",
 ]);
 
 describe("M0-02 workspace scaffold", () => {
@@ -91,9 +102,13 @@ describe("M0-02 workspace scaffold", () => {
   it("adds no dependencies beyond the agreed minimal scaffold set", () => {
     for (const { manifest } of workspaceManifests()) {
       for (const [dep] of Object.entries(manifest.dependencies ?? {})) {
+        const allowed = new Set([
+          ...ALLOWED_RUNTIME_DEPS,
+          ...(APPROVED_PACKAGE_RUNTIME_DEPS[manifest.name] ?? []),
+        ]);
         expect(
-          ALLOWED_RUNTIME_DEPS,
-          `${manifest.name} runtime dep ${dep} is not in the M0-02 set`,
+          allowed,
+          `${manifest.name} runtime dep ${dep} is not an approved dependency`,
         ).toContain(dep);
       }
       for (const [dep] of Object.entries(manifest.devDependencies ?? {})) {

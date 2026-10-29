@@ -19,7 +19,8 @@
       "@crm/ai": ["./packages/ai/src/index.ts"],
       "@crm/docs": ["./packages/docs/src/index.ts"],
       "@crm/config": ["./packages/config/src/index.ts"],
-      "@crm/worker": ["./apps/worker/src/index.ts"]
+      "@crm/worker": ["./apps/worker/src/index.ts"],
+      "@/*": ["./apps/web/*"]
     }
   },
   "include": ["packages/*/src/**/*.ts", "apps/worker/src/**/*.ts", "tests/**/*.ts"],

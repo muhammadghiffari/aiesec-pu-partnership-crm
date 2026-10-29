@@ -10,6 +10,7 @@
     ".": "./src/index.ts"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.13",
     "typescript": "7.0.2"
   }
 }
