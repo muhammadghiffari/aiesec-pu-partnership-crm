@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./styles/base.css";
 import "./styles/components.css";
-import { Shell } from "@/features/demo/shell/Shell";
+import "./styles/landing.css";
 import { DemoProvider } from "@/features/demo/store";
 import { ToastProvider } from "@/features/demo/ui/toast";
 
@@ -13,16 +13,15 @@ export const metadata: Metadata = {
 };
 
 /**
- * Demo subtree layout. Deliberately self-contained: providers hold the
- * in-memory synthetic dataset and every screen reads from it. The real
- * /partners routes remain untouched.
+ * Demo subtree layout. Providers live here (not in the workspace group) so
+ * the in-memory demo session survives client navigation between the landing
+ * page at /demo and the CRM workspace routes. The real /partners routes
+ * remain untouched.
  */
 export default function DemoLayout({ children }: { children: React.ReactNode }) {
   return (
     <DemoProvider>
-      <ToastProvider>
-        <Shell>{children}</Shell>
-      </ToastProvider>
+      <ToastProvider>{children}</ToastProvider>
     </DemoProvider>
   );
 }
