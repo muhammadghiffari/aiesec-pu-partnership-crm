@@ -4,6 +4,7 @@ import { migration0003 } from "./0003_implementation_revenue_merch";
 import { migration0004 } from "./0004_audit_log";
 import { migration0005 } from "./0005_user_sessions";
 import { migration0006 } from "./0006_research_jobs";
+import { migration0007 } from "./0007_contact_verification";
 import type { Migration } from "./types";
 
 /**
@@ -17,6 +18,7 @@ export const MIGRATIONS: readonly Migration[] = [
   migration0004,
   migration0005,
   migration0006,
+  migration0007,
 ];
 
 export type { Migration } from "./types";

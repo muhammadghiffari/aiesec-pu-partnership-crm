@@ -29,7 +29,7 @@ async function snapshot(db: PGlite): Promise<string> {
 describe("migration runner", () => {
   it("ships a valid, contiguous, reversible migration list", () => {
     expect(() => validateMigrationList(MIGRATIONS)).not.toThrow();
-    expect(MIGRATIONS.map((m) => m.version)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(MIGRATIONS.map((m) => m.version)).toEqual([1, 2, 3, 4, 5, 6, 7]);
     for (const m of MIGRATIONS) {
       expect(m.down.trim().length).toBeGreaterThan(0);
     }
@@ -37,7 +37,7 @@ describe("migration runner", () => {
 
   it("applies everything, is idempotent, and records version/name/checksum", async () => {
     const db = new PGlite();
-    expect(await migrateUp(db, MIGRATIONS)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(await migrateUp(db, MIGRATIONS)).toEqual([1, 2, 3, 4, 5, 6, 7]);
     expect(await migrateUp(db, MIGRATIONS)).toEqual([]);
     const { rows } = await db.query<{ version: number; name: string; checksum: string }>(
       "SELECT version, name, checksum FROM schema_migrations ORDER BY version",
@@ -51,7 +51,7 @@ describe("migration runner", () => {
     await migrateUp(db, MIGRATIONS);
     const first = await snapshot(db);
 
-    expect(await migrateDown(db, MIGRATIONS)).toEqual([6, 5, 4, 3, 2, 1]);
+    expect(await migrateDown(db, MIGRATIONS)).toEqual([7, 6, 5, 4, 3, 2, 1]);
     const tables = await db.query<{ table_name: string }>(
       "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'",
     );

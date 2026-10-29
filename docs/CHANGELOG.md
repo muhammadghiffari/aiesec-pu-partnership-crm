@@ -63,3 +63,10 @@
 - Retry safety: exponential backoff, lease recovery after a crash, zombie-worker writes refused, completion ignores duplicates, attempt bound never exceeded.
 - Interim decisions Q-20..Q-22 recorded in `docs/DECISIONS.md`.
 
+### M2-02 — Contact verification and enrichment boundary (FR-200, FR-309-310)
+
+- Migration 0007: `contact_channels` (one canonical, immutable address per row with source, verification method, evidence, verifier) and `contact_candidates` (provenance required, one pending candidate per address, complete review states).
+- `packages/core/src/contacts/`: address canonicalisation (lower-case email, E.164 phone/WhatsApp, canonical LinkedIn profile URL), enrichment parser (untrusted, capped at 10, provider claims ignored, off-domain flag), `assessReadiness` (DNC, identity, channel, owner, type and partner checks) and a service for candidates, lookup, verification, DNC and readiness.
+- Enrichment is off unless a provider is configured; one partner per request; no scraping, crawling or connection requests (see `docs/CONTACT_SOURCING.md`).
+- Interim decisions Q-23, Q-24 recorded in `docs/DECISIONS.md`.
+
