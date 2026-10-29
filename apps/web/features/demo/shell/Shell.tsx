@@ -26,7 +26,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "Operate",
     items: [
-      { href: "/demo", label: "Overview", icon: "overview" },
+      { href: "/demo/dashboard", label: "Overview", icon: "overview" },
       { href: "/demo/partners", label: "Partners", icon: "briefcase" },
       { href: "/demo/contacts", label: "Contacts", icon: "users" },
     ],
@@ -63,13 +63,13 @@ function pageTitle(pathname: string): { group: string; current: string } {
     ["/demo/projects", "Projects"],
     ["/demo/reports", "Reports"],
     ["/demo/settings", "Settings"],
-    ["/demo", "Overview"],
+    ["/demo/dashboard", "Overview"],
   ];
   for (const [prefix, title] of map) {
     if (
       prefix === "/demo/partners/"
         ? pathname.startsWith(prefix)
-        : pathname === prefix || (prefix !== "/demo" && pathname.startsWith(`${prefix}/`))
+        : pathname === prefix || (prefix !== "/demo/dashboard" && pathname.startsWith(`${prefix}/`))
     ) {
       return { group: "AIESEC PU CRM", current: title };
     }
@@ -93,7 +93,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const partnerCount = state.partners.length;
 
   function isActive(href: string): boolean {
-    if (href === "/demo") return pathname === "/demo";
+    if (href === "/demo/dashboard") return pathname === "/demo/dashboard" || pathname === "/demo";
     return pathname.startsWith(href);
   }
 
@@ -191,7 +191,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               <Icon name="menu" size={17} />
             </button>
             <nav className="top-crumb" aria-label="Breadcrumb">
-              <Link href="/demo">{group}</Link>
+              <Link href="/demo/dashboard">{group}</Link>
               <span
                 className="hide-sm"
                 style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
